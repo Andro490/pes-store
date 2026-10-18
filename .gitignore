@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Production Build Output
+dist/
+*/dist/
+
+# Environment Variables (مهم جداً لعدم تسريب مفاتيح Paymob)
+.env
+*/.env
+!.env.example
+!*/.env.example
+
+# Logs & Debugging
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Editor & System Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temp & Artifacts
+.system_generated/
