@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'pes-backend',
+      name: 'pes-store-backend',
       cwd: './backend',
       script: 'dist/server.js',
       instances: 1,
@@ -10,7 +10,7 @@ module.exports = {
       max_memory_restart: '500M',
       env: {
         NODE_ENV: 'production',
-        PORT: 5000,
+        PORT: 5050,
       },
     },
   ],

@@ -23,6 +23,6 @@ cd ..
 
 # 4. إعادة تشغيل السيرفر عبر PM2
 echo "🔄 إعادة تشغيل خدمة الـ Backend عبر PM2..."
-pm2 restart pes-backend || pm2 start ecosystem.config.js
+pm2 restart pes-store-backend || pm2 start ecosystem.config.js
 
 echo "✅ تم نشر وتحديث المتجر بنجاح 🚀"
