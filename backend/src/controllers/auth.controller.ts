@@ -116,3 +116,49 @@ export const getMe = (req: Request, res: Response): void => {
     data: { id: user.id, name: user.name, email: user.email, role: user.role },
   });
 };
+
+// ─── Admin Login (Credentials from .env) ──────────────────────────────────────
+export const adminLogin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { username, password } = req.body;
+    const adminUser = process.env.ADMIN_USERNAME || 'admin';
+    const adminPass = process.env.ADMIN_PASSWORD || 'pes2025@admin';
+
+    if (!username || !password) {
+      res.status(400).json({ success: false, message: 'اسم المستخدم وكلمة المرور مطلوبة' });
+      return;
+    }
+
+    if (username.trim() !== adminUser.trim() || password !== adminPass) {
+      res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة. تأكد من اسم المستخدم وكلمة السر.' });
+      return;
+    }
+
+    // Generate Admin JWT token
+    const token = jwt.sign(
+      { id: 'admin-root', email: `${adminUser}@pes.store`, role: 'admin' },
+      process.env.JWT_SECRET || 'pes_store_jwt_super_secret_key_2025',
+      { expiresIn: (process.env.JWT_EXPIRES_IN as any) || '7d' }
+    );
+
+    res.json({
+      success: true,
+      message: 'تم تسجيل دخول لوحة التحكم بنجاح 👑',
+      data: {
+        token,
+        user: { id: 'admin-root', name: adminUser, role: 'admin' },
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في الخادم', error: String(error) });
+  }
+};
+
+// ─── Admin Verify Token ───────────────────────────────────────────────────────
+export const verifyAdmin = (req: Request, res: Response): void => {
+  res.json({
+    success: true,
+    message: 'جلسة الإدارة صالحة',
+    data: req.user,
+  });
+};

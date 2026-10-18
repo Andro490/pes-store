@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
+import { authenticate, authorizeRoles } from '../middleware/auth.middleware';
 
 export interface PesAccount {
   id: string;
@@ -106,7 +107,7 @@ router.get('/:id', (req: Request, res: Response) => {
 });
 
 // 3. POST /api/pes-accounts (إضافة حساب جديد من لوحة التحكم)
-router.post('/', (req: Request, res: Response) => {
+router.post('/', authenticate, authorizeRoles('admin'), (req: Request, res: Response) => {
   try {
     const {
       title,
@@ -171,7 +172,7 @@ router.post('/', (req: Request, res: Response) => {
 });
 
 // 4. PUT /api/pes-accounts/:id (تعديل حساب)
-router.put('/:id', (req: Request, res: Response) => {
+router.put('/:id', authenticate, authorizeRoles('admin'), (req: Request, res: Response) => {
   try {
     const accounts = readAccounts();
     const index = accounts.findIndex(a => a.id === req.params.id);
@@ -209,7 +210,7 @@ router.put('/:id', (req: Request, res: Response) => {
 });
 
 // 5. PATCH /api/pes-accounts/:id/toggle-paid (تبديل حالة تم الدفع / متاح)
-router.patch('/:id/toggle-paid', (req: Request, res: Response) => {
+router.patch('/:id/toggle-paid', authenticate, authorizeRoles('admin'), (req: Request, res: Response) => {
   try {
     const accounts = readAccounts();
     const account = accounts.find(a => a.id === req.params.id);
@@ -235,7 +236,7 @@ router.patch('/:id/toggle-paid', (req: Request, res: Response) => {
 });
 
 // 6. DELETE /api/pes-accounts/:id (حذف الحساب)
-router.delete('/:id', (req: Request, res: Response) => {
+router.delete('/:id', authenticate, authorizeRoles('admin'), (req: Request, res: Response) => {
   try {
     let accounts = readAccounts();
     const initialLen = accounts.length;

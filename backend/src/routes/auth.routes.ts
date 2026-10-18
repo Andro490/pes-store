@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { register, login, getMe } from '../controllers/auth.controller';
-import { authenticate } from '../middleware/auth.middleware';
+import { register, login, getMe, adminLogin, verifyAdmin } from '../controllers/auth.controller';
+import { authenticate, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -12,5 +12,11 @@ router.post('/login', login);
 
 // GET /api/auth/me  (protected)
 router.get('/me', authenticate, getMe);
+
+// POST /api/auth/admin-login (Admin credentials from .env)
+router.post('/admin-login', adminLogin);
+
+// GET /api/auth/admin-verify
+router.get('/admin-verify', authenticate, authorizeRoles('admin'), verifyAdmin);
 
 export default router;

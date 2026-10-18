@@ -1,12 +1,21 @@
 import { useState, useEffect, useMemo } from 'react';
-import { pesAccountsApi, paymobApi } from './services/api';
+import { pesAccountsApi, paymobApi, authApi } from './services/api';
 import type { PesAccount } from './types';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'store' | 'admin'>('store');
+  const initialIsAdminPath = window.location.pathname === '/admin' || window.location.hash === '#admin';
+  const [currentView, setCurrentView] = useState<'store' | 'admin'>(initialIsAdminPath ? 'admin' : 'store');
   const [accounts, setAccounts] = useState<PesAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Admin authentication states
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminAuthLoading, setAdminAuthLoading] = useState(false);
+  const [adminAuthError, setAdminAuthError] = useState<string | null>(null);
+  const [adminUser, setAdminUser] = useState<{ name: string; role: string } | null>(null);
 
   // Store filter states
   const [selectedPlatform, setSelectedPlatform] = useState<'all' | 'android' | 'ios'>('all');
@@ -44,7 +53,74 @@ export default function App() {
 
   useEffect(() => {
     fetchAccounts();
+    checkAdminAuth();
+
+    const handlePopState = () => {
+      const isAdminPath = window.location.pathname === '/admin' || window.location.hash === '#admin';
+      setCurrentView(isAdminPath ? 'admin' : 'store');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  const navigateToView = (view: 'store' | 'admin') => {
+    setCurrentView(view);
+    if (view === 'admin') {
+      window.history.pushState(null, '', '/admin');
+    } else {
+      window.history.pushState(null, '', '/');
+    }
+  };
+
+  const checkAdminAuth = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsAdminLoggedIn(false);
+      return;
+    }
+    try {
+      const res = await authApi.adminVerify();
+      if (res && res.success) {
+        setIsAdminLoggedIn(true);
+        setAdminUser(res.data);
+      } else {
+        localStorage.removeItem('token');
+        setIsAdminLoggedIn(false);
+      }
+    } catch {
+      localStorage.removeItem('token');
+      setIsAdminLoggedIn(false);
+    }
+  };
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminAuthError(null);
+    setAdminAuthLoading(true);
+    try {
+      const res = await authApi.adminLogin({
+        username: adminUsername,
+        password: adminPassword,
+      });
+      if (res.success && res.data.token) {
+        localStorage.setItem('token', res.data.token);
+        setIsAdminLoggedIn(true);
+        setAdminUser(res.data.user);
+        setAdminPassword('');
+      }
+    } catch (err: any) {
+      setAdminAuthError(err.message || 'بيانات الدخول غير صحيحة');
+    } finally {
+      setAdminAuthLoading(false);
+    }
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem('token');
+    setIsAdminLoggedIn(false);
+    setAdminUser(null);
+    navigateToView('store');
+  };
 
   const fetchAccounts = async () => {
     try {
@@ -247,7 +323,7 @@ export default function App() {
       {/* ─── Navbar with View Switcher ─── */}
       <header className="site-header">
         <div className="header-container">
-          <div className="logo-area" style={{ cursor: 'pointer' }} onClick={() => setCurrentView('store')}>
+          <div className="logo-area" style={{ cursor: 'pointer' }} onClick={() => navigateToView('store')}>
             <div className="logo-icon-box">
               <div className="logo-icon-inner">⚽</div>
             </div>
@@ -262,7 +338,7 @@ export default function App() {
 
           <nav className="header-nav">
             <button
-              onClick={() => setCurrentView('store')}
+              onClick={() => navigateToView('store')}
               style={{
                 background: currentView === 'store' ? 'rgba(6, 182, 212, 0.15)' : 'transparent',
                 color: currentView === 'store' ? '#38bdf8' : 'var(--text-muted)',
@@ -281,25 +357,50 @@ export default function App() {
               <span>واجهة المتجر</span>
             </button>
 
-            <button
-              onClick={() => setCurrentView('admin')}
-              style={{
-                background: currentView === 'admin' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                color: currentView === 'admin' ? '#a5b4fc' : 'var(--text-muted)',
-                border: currentView === 'admin' ? '1px solid rgba(99, 102, 241, 0.4)' : 'none',
-                padding: '8px 16px',
-                borderRadius: '12px',
-                fontWeight: 700,
-                fontSize: '14px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <span>⚙️</span>
-              <span>لوحة تحكم الباك إند</span>
-            </button>
+            {isAdminLoggedIn && (
+              <>
+                <button
+                  onClick={() => navigateToView('admin')}
+                  style={{
+                    background: currentView === 'admin' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                    color: currentView === 'admin' ? '#a5b4fc' : 'var(--text-muted)',
+                    border: currentView === 'admin' ? '1px solid rgba(99, 102, 241, 0.4)' : 'none',
+                    padding: '8px 16px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <span>⚙️</span>
+                  <span>لوحة التحكم</span>
+                </button>
+
+                <button
+                  onClick={handleAdminLogout}
+                  title="تسجيل الخروج"
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    color: '#f87171',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    padding: '8px 14px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <span>🚪</span>
+                  <span>خروج</span>
+                </button>
+              </>
+            )}
           </nav>
 
           <div>
@@ -308,52 +409,233 @@ export default function App() {
                 <span>⚡</span>
                 <span>شراء حساب</span>
               </button>
-            ) : (
+            ) : isAdminLoggedIn ? (
               <button onClick={handleOpenCreateModal} className="btn-header-buy" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>
                 <span>➕</span>
                 <span>رفع حساب جديد</span>
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </header>
 
       {/* ═══════════════════════════════════════════════════════
-          صفحة 1: لوحة تحكم الباك إند (Admin Dashboard)
+          صفحة 1: لوحة تحكم الباك إند (Admin Dashboard & Login)
       ═══════════════════════════════════════════════════════ */}
-      {currentView === 'admin' && (
+      {currentView === 'admin' && !isAdminLoggedIn && (
+        <main className="store-section" style={{ minHeight: '65vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '40px', paddingBottom: '60px' }}>
+          <div style={{
+            maxWidth: '460px',
+            width: '100%',
+            background: 'rgba(14, 18, 28, 0.9)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(99, 102, 241, 0.35)',
+            borderRadius: '24px',
+            padding: '36px 28px',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(99, 102, 241, 0.15)',
+            textAlign: 'right'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '20px',
+                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(6, 182, 212, 0.2))',
+                border: '1px solid rgba(99, 102, 241, 0.4)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '28px',
+                marginBottom: '14px',
+                boxShadow: '0 8px 24px rgba(99, 102, 241, 0.2)'
+              }}>
+                🔐
+              </div>
+              <h1 style={{ fontSize: '24px', fontWeight: 900, color: '#fff', marginBottom: '8px' }}>
+                تسجيل دخول الإدارة
+              </h1>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                منطقة محمية خاصة بمسؤول المتجر لإدارة الحسابات، وتحديد الأسعار وتحديث المعروضات
+              </p>
+            </div>
+
+            {adminAuthError && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '12px',
+                padding: '12px 16px',
+                color: '#f87171',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span>⚠️</span>
+                <span>{adminAuthError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#cbd5e1', marginBottom: '8px' }}>
+                  اسم المستخدم (Username)
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="أدخل اسم المستخدم..."
+                  value={adminUsername}
+                  onChange={(e) => setAdminUsername(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    borderRadius: '14px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--border-light)',
+                    color: '#fff',
+                    fontSize: '14px',
+                    fontFamily: 'Cairo, sans-serif',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#cbd5e1', marginBottom: '8px' }}>
+                  كلمة المرور (Password)
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="أدخل كلمة المرور المعتمدة..."
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    borderRadius: '14px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--border-light)',
+                    color: '#fff',
+                    fontSize: '14px',
+                    fontFamily: 'Cairo, sans-serif',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={adminAuthLoading}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
+                  color: '#fff',
+                  fontWeight: 900,
+                  fontSize: '15px',
+                  border: 'none',
+                  cursor: adminAuthLoading ? 'not-allowed' : 'pointer',
+                  opacity: adminAuthLoading ? 0.7 : 1,
+                  boxShadow: '0 8px 25px rgba(99, 102, 241, 0.35)',
+                  marginTop: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <span>{adminAuthLoading ? '⏳' : '🚀'}</span>
+                <span>{adminAuthLoading ? 'جاري التحقق...' : 'دخول لوحة التحكم'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigateToView('store')}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  marginTop: '10px',
+                  textAlign: 'center'
+                }}
+              >
+                ← العودة إلى واجهة المتجر
+              </button>
+            </form>
+          </div>
+        </main>
+      )}
+
+      {currentView === 'admin' && isAdminLoggedIn && (
         <main className="store-section" style={{ paddingTop: '30px' }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '28px' }}>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#818cf8', marginBottom: '4px' }}>
-                ⚙️ إدارة النظام والمعروضات
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#818cf8' }}>
+                  ⚙️ إدارة النظام والمعروضات
+                </span>
+                <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.15)', color: '#a5b4fc', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+                  👑 مرحباً: {adminUser?.name || 'المدير'}
+                </span>
               </div>
               <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#fff' }}>
                 لوحة تحكم حسابات بيس (Backend Dashboard)
               </h1>
             </div>
 
-            <button
-              onClick={handleOpenCreateModal}
-              style={{
-                padding: '14px 28px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, #10b981, #06b6d4)',
-                color: '#030712',
-                fontWeight: 900,
-                fontSize: '16px',
-                border: 'none',
-                cursor: 'pointer',
-                boxShadow: '0 6px 20px var(--accent-emerald-glow)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-            >
-              <span>➕</span>
-              <span>رفع حساب بيس جديد الآن</span>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button
+                onClick={handleAdminLogout}
+                style={{
+                  padding: '12px 20px',
+                  borderRadius: '14px',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  color: '#f87171',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  fontWeight: 800,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>🚪</span>
+                <span>تسجيل الخروج</span>
+              </button>
+
+              <button
+                onClick={handleOpenCreateModal}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                  color: '#030712',
+                  fontWeight: 900,
+                  fontSize: '15px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 20px var(--accent-emerald-glow)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <span>➕</span>
+                <span>رفع حساب بيس جديد الآن</span>
+              </button>
+            </div>
           </div>
 
           {/* Stats Bar */}
@@ -1291,8 +1573,28 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer className="site-footer">
-        <p>© 2026 eFootball Accounts Store - جميع الحقوق محفوظة لمتجر حسابات بيس موبايل</p>
+      <footer className="site-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', padding: '24px 30px' }}>
+        <p style={{ margin: 0 }}>© 2026 eFootball Accounts Store - جميع الحقوق محفوظة لمتجر حسابات بيس موبايل</p>
+        
+        <div>
+          <button
+            onClick={() => navigateToView('admin')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'rgba(255, 255, 255, 0.25)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontFamily: 'Cairo, sans-serif'
+            }}
+          >
+            <span>🔐</span>
+            <span>{isAdminLoggedIn ? 'لوحة تحكم المدير' : 'دخول الإدارة'}</span>
+          </button>
+        </div>
       </footer>
     </div>
   );

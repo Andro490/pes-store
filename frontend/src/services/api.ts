@@ -37,6 +37,15 @@ export const authApi = {
   login: (data: { email: string; password: string }) =>
     request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
 
+  adminLogin: (data: { username: string; password: string }) =>
+    request<{ success: boolean; message: string; data: { token: string; user: { id: string; name: string; role: string } } }>('/auth/admin-login', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  adminVerify: () =>
+    request<{ success: boolean; message: string; data: any }>('/auth/admin-verify'),
+
   getMe: () => request('/auth/me'),
 };
 
