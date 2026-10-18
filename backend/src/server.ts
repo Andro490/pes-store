@@ -38,7 +38,19 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// ─── 404 Handler ─────────────────────────────────────────────────────────────
+// ─── Static Frontend (Production) ──────────────────────────────────────────
+import path from 'path';
+const frontendDist = path.resolve(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDist));
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  res.sendFile(path.join(frontendDist, 'index.html'));
+});
+
+// ─── 404 Handler for API ──────────────────────────────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
