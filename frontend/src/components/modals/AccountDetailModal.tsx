@@ -8,7 +8,7 @@ interface AccountDetailModalProps {
 }
 
 export function AccountDetailModal({ account, onClose, onOrder }: AccountDetailModalProps) {
-  const { t } = useLanguage();
+  const { t, formatPrice } = useLanguage();
 
   return (
     <div className="modal-backdrop-overlay">
@@ -38,7 +38,7 @@ export function AccountDetailModal({ account, onClose, onOrder }: AccountDetailM
                 fontFamily: 'Outfit, sans-serif',
               }}
             >
-              {account.price} {t('currency')}
+              {formatPrice(account.price)}
             </div>
           </div>
 

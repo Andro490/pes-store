@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { translations, type Language, type TranslationKey } from './translations';
 
-// EGP to USD approximate exchange rate
-const EGP_TO_USD_RATE = 0.02; // 1 EGP ≈ 0.02 USD (adjust as needed)
+// Cache keys & fallback exchange rate (1 USD = ~50 EGP fallback if offline)
+const RATE_CACHE_KEY = 'pes_usd_to_egp_rate';
+const DEFAULT_USD_TO_EGP = 50.0;
 
 export type Currency = 'EGP' | 'USD';
 
@@ -16,7 +17,9 @@ interface LanguageContextType {
   currency: Currency;
   setCurrency: (c: Currency) => void;
   formatPrice: (egpPrice: number) => string;
+  formatPriceParts: (egpPrice: number) => { amount: string; unit: string; prefix: boolean };
   isOutsideEgypt: boolean;
+  usdToEgpRate: number;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -57,6 +60,43 @@ async function detectCountry(): Promise<string | null> {
   }
 }
 
+/** Fetch today's live USD to EGP exchange rate via free open API */
+async function fetchLiveUsdRate(): Promise<number> {
+  const cached = sessionStorage.getItem(RATE_CACHE_KEY);
+  if (cached) {
+    const parsed = parseFloat(cached);
+    if (!isNaN(parsed) && parsed > 20) return parsed;
+  }
+
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
+      const data = await res.json();
+      const egpRate = data?.rates?.EGP;
+      if (typeof egpRate === 'number' && egpRate > 0) {
+        sessionStorage.setItem(RATE_CACHE_KEY, String(egpRate));
+        return egpRate;
+      }
+    }
+  } catch {
+    try {
+      const res2 = await fetch('https://api.exchangerate-api.com/v4/latest/USD', { signal: AbortSignal.timeout(4000) });
+      if (res2.ok) {
+        const data2 = await res2.json();
+        const egpRate = data2?.rates?.EGP;
+        if (typeof egpRate === 'number' && egpRate > 0) {
+          sessionStorage.setItem(RATE_CACHE_KEY, String(egpRate));
+          return egpRate;
+        }
+      }
+    } catch {
+      // offline fallback
+    }
+  }
+
+  return DEFAULT_USD_TO_EGP;
+}
+
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
@@ -70,7 +110,23 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return 'EGP';
   });
 
+  const [usdToEgpRate, setUsdToEgpRate] = useState<number>(() => {
+    const cached = sessionStorage.getItem(RATE_CACHE_KEY);
+    if (cached) {
+      const parsed = parseFloat(cached);
+      if (!isNaN(parsed) && parsed > 20) return parsed;
+    }
+    return DEFAULT_USD_TO_EGP;
+  });
+
   const [isOutsideEgypt, setIsOutsideEgypt] = useState(false);
+
+  // Fetch live USD to EGP rate on mount
+  useEffect(() => {
+    fetchLiveUsdRate().then((rate) => {
+      setUsdToEgpRate(rate);
+    });
+  }, []);
 
   const isRTL = language === 'ar';
   const dir = isRTL ? 'rtl' : 'ltr';
@@ -129,6 +185,11 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const t = (key: TranslationKey, params?: Record<string, string | number>): string => {
+    if (key === 'currency') {
+      if (currency === 'USD') return 'USD';
+      return language === 'ar' ? 'جنيه' : 'EGP';
+    }
+
     const langDict = translations[language] || translations.ar;
     let text = langDict[key] || translations.ar[key] || key;
 
@@ -142,21 +203,33 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   /**
-   * Format a price stored in EGP.
-   * USD → convert and show "$xx"
-   * EGP → show "xx جنيه" (Arabic) or "xx EGP" (English)
+   * Split price into amount, unit and whether unit is a prefix ($) or suffix (جنيه / EGP)
+   * Converts EGP to USD by dividing by today's live USD rate: (egpPrice / usdToEgpRate)
    */
-  const formatPrice = (egpPrice: number): string => {
+  const formatPriceParts = (egpPrice: number): { amount: string; unit: string; prefix: boolean } => {
     if (currency === 'USD') {
-      const usd = egpPrice * EGP_TO_USD_RATE;
-      return `$${usd.toFixed(2)}`;
+      const rate = usdToEgpRate > 0 ? usdToEgpRate : DEFAULT_USD_TO_EGP;
+      // تقسيم السعر بالمصري على سعر صرف الدولار اليوم
+      const usd = egpPrice / rate;
+      const formatted = (Math.round(usd * 100) / 100).toFixed(2);
+      return { amount: formatted, unit: '$', prefix: true };
     }
     const label = language === 'ar' ? 'جنيه' : 'EGP';
-    return `${egpPrice.toLocaleString()} ${label}`;
+    return { amount: egpPrice.toLocaleString(), unit: label, prefix: false };
+  };
+
+  /**
+   * Format a price stored in EGP according to current selected currency.
+   * USD → "$5.43"
+   * EGP → "300 جنيه" (Arabic) or "300 EGP" (English)
+   */
+  const formatPrice = (egpPrice: number): string => {
+    const { amount, unit, prefix } = formatPriceParts(egpPrice);
+    return prefix ? `${unit}${amount}` : `${amount} ${unit}`;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t, isRTL, dir, currency, setCurrency, formatPrice, isOutsideEgypt }}>
+    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t, isRTL, dir, currency, setCurrency, formatPrice, formatPriceParts, isOutsideEgypt, usdToEgpRate }}>
       {children}
     </LanguageContext.Provider>
   );

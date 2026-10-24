@@ -89,7 +89,7 @@ export function PurchaseModal({
                 fontFamily: 'Outfit, sans-serif',
               }}
             >
-              {account.price} {t('currency')}
+              {formatPrice(account.price)}
             </span>
           </div>
         </div>

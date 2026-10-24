@@ -8,7 +8,8 @@ interface AccountCardProps {
 }
 
 export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
-  const { t } = useLanguage();
+  const { t, formatPrice, formatPriceParts } = useLanguage();
+  const { amount, unit, prefix } = formatPriceParts(account.price);
 
   return (
     <div className="account-square-card" style={{ opacity: account.isAvailable ? 1 : 0.85 }}>
@@ -68,13 +69,20 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
             <div>
               <div className="price-currency-tag">{t('priceLabel')}</div>
               <div className="price-main-block">
-                <span className="price-current-num">{account.price}</span>
-                <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--accent-emerald)' }}>
-                  {t('currency')}
-                </span>
+                {prefix && (
+                  <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--accent-emerald)' }}>
+                    {unit}
+                  </span>
+                )}
+                <span className="price-current-num">{amount}</span>
+                {!prefix && (
+                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--accent-emerald)' }}>
+                    {unit}
+                  </span>
+                )}
                 {account.oldPrice && (
-                  <span className="price-old-num">
-                    {account.oldPrice} {t('currency')}
+                  <span className="price-old-num" style={{ marginInlineStart: '6px' }}>
+                    {formatPrice(account.oldPrice)}
                   </span>
                 )}
               </div>
