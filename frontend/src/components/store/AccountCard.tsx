@@ -100,16 +100,12 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
           <h3 className="card-account-title">{account.title}</h3>
 
           {/* Specs */}
-          <div className="card-specs-row">
-            <div className="spec-mini-badge">
+          <div className="card-specs-row" style={{ gridTemplateColumns: '1fr' }}>
+            <div className="spec-mini-badge" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 12px' }}>
               <span className="spec-name">{t('epicLegends')}</span>
-              <span className="spec-val-cyan">
+              <span className="spec-val-cyan" style={{ fontSize: '13px', fontWeight: '800' }}>
                 ⭐ {account.epicCount} {t('playerUnit')}
               </span>
-            </div>
-            <div className="spec-mini-badge">
-              <span className="spec-name">{t('gpBalance')}</span>
-              <span className="spec-val-indigo">💰 {account.gp}</span>
             </div>
           </div>
 

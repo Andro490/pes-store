@@ -56,9 +56,12 @@ app.use((_req, res) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
+import { seedInitialAccountsIfEmpty } from './services/prisma.service';
+
+app.listen(PORT, async () => {
   console.log(`\n🚀 Server running on http://localhost:${PORT}`);
   console.log(`📦 Environment: ${process.env.NODE_ENV}`);
+  await seedInitialAccountsIfEmpty();
 });
 
 export default app;

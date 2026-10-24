@@ -1,0 +1,32 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model PesAccount {
+  id               String   @id
+  title            String
+  platform         String   // "android" | "ios"
+  price            Float
+  oldPrice         Float?
+  currency         String   @default("EGP")
+  teamStrength     Int
+  coins            Int
+  gp               String   @default("1M")
+  epicCount        Int
+  highlightPlayers String   @default("[]") // JSON string of player names
+  loginMethod      String
+  isAvailable      Boolean  @default(true)
+  featured         Boolean  @default(false)
+  badge            String?
+  imageUrl         String
+  details          String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("pes_accounts")
+}

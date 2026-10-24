@@ -82,8 +82,8 @@ export function AccountFormModal({
             </FormField>
           </div>
 
-          {/* Strength + Coins + GP */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+          {/* Strength + Coins */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <FormField label={t('formStrengthLabel')}>
               <input
                 type="number"
@@ -100,16 +100,6 @@ export function AccountFormModal({
                 placeholder="1500"
                 value={formData.coins}
                 onChange={(e) => field('coins')(Number(e.target.value))}
-                className="search-input-field"
-                style={{ padding: '10px 14px' }}
-              />
-            </FormField>
-            <FormField label={t('formGpLabel')}>
-              <input
-                type="text"
-                placeholder="4.5M"
-                value={formData.gp}
-                onChange={(e) => field('gp')(e.target.value)}
                 className="search-input-field"
                 style={{ padding: '10px 14px' }}
               />

@@ -1,14 +1,14 @@
 import { Router, Request, Response } from 'express';
-import fs from 'fs';
-import path from 'path';
+import { Prisma } from '@prisma/client';
 import { authenticate, authorizeRoles } from '../middleware/auth.middleware';
+import { prisma } from '../services/prisma.service';
 
 export interface PesAccount {
   id: string;
   title: string;
   platform: 'android' | 'ios';
   price: number;
-  oldPrice?: number;
+  oldPrice?: number | null;
   currency: string;
   teamStrength: number;
   coins: number;
@@ -18,96 +18,110 @@ export interface PesAccount {
   loginMethod: string;
   isAvailable: boolean;
   featured: boolean;
-  badge?: string;
+  badge?: string | null;
   imageUrl: string;
   details: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
-
-const dataFilePath = path.join(__dirname, '../../data/accounts.json');
-
-// دوال مساعدة للقراءة والكتابة في JSON
-const readAccounts = (): PesAccount[] => {
-  try {
-    if (!fs.existsSync(dataFilePath)) {
-      return [];
-    }
-    const data = fs.readFileSync(dataFilePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (err) {
-    console.error('Error reading accounts.json:', err);
-    return [];
-  }
-};
-
-const writeAccounts = (accounts: PesAccount[]): boolean => {
-  try {
-    const dir = path.dirname(dataFilePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(dataFilePath, JSON.stringify(accounts, null, 2), 'utf-8');
-    return true;
-  } catch (err) {
-    console.error('Error writing accounts.json:', err);
-    return false;
-  }
-};
 
 const router = Router();
 
-// 1. GET /api/pes-accounts (جلب الحسابات مع الفلاتر)
-router.get('/', (req: Request, res: Response) => {
-  const { platform, search, maxPrice, status } = req.query;
+// 1. GET /api/pes-accounts (جلب الحسابات من قاعدة البيانات مع الفلاتر)
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const { platform, search, maxPrice, status } = req.query;
 
-  let accounts = readAccounts();
+    const where: Prisma.PesAccountWhereInput = {};
 
-  // فلترة حسب المنصة
-  if (platform && (platform === 'android' || platform === 'ios')) {
-    accounts = accounts.filter(acc => acc.platform === platform);
+    if (platform && (platform === 'android' || platform === 'ios')) {
+      where.platform = platform;
+    }
+
+    if (status === 'available') {
+      where.isAvailable = true;
+    } else if (status === 'paid' || status === 'sold') {
+      where.isAvailable = false;
+    }
+
+    if (maxPrice && !isNaN(Number(maxPrice))) {
+      where.price = { lte: Number(maxPrice) };
+    }
+
+    const accounts = await prisma.pesAccount.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // تحويل highlightPlayers من JSON string إلى مصفوفة
+    let formatted: PesAccount[] = accounts.map((acc: any) => {
+      let players: string[] = [];
+      try {
+        players = JSON.parse(acc.highlightPlayers);
+      } catch {
+        players = [];
+      }
+      return {
+        ...acc,
+        platform: acc.platform as 'android' | 'ios',
+        highlightPlayers: players,
+      };
+    });
+
+    if (search && typeof search === 'string') {
+      const s = search.toLowerCase();
+      formatted = formatted.filter(
+        (acc) =>
+          acc.title.toLowerCase().includes(s) ||
+          acc.highlightPlayers.some((p) => p.toLowerCase().includes(s)) ||
+          acc.details.toLowerCase().includes(s)
+      );
+    }
+
+    res.json({
+      success: true,
+      count: formatted.length,
+      data: formatted,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل جلب الحسابات من قاعدة البيانات', error: error.message });
   }
-
-  // فلترة حسب الحالة (متاح / تم الدفع)
-  if (status === 'available') {
-    accounts = accounts.filter(acc => acc.isAvailable === true);
-  } else if (status === 'paid' || status === 'sold') {
-    accounts = accounts.filter(acc => acc.isAvailable === false);
-  }
-
-  // فلترة بالبحث
-  if (search && typeof search === 'string') {
-    const s = search.toLowerCase();
-    accounts = accounts.filter(acc =>
-      acc.title.toLowerCase().includes(s) ||
-      acc.highlightPlayers.some(p => p.toLowerCase().includes(s)) ||
-      acc.details.toLowerCase().includes(s)
-    );
-  }
-
-  // فلترة بأعلى سعر
-  if (maxPrice && !isNaN(Number(maxPrice))) {
-    accounts = accounts.filter(acc => acc.price <= Number(maxPrice));
-  }
-
-  res.json({
-    success: true,
-    count: accounts.length,
-    data: accounts
-  });
 });
 
 // 2. GET /api/pes-accounts/:id (جلب حساب محدد)
-router.get('/:id', (req: Request, res: Response) => {
-  const accounts = readAccounts();
-  const account = accounts.find(a => a.id === req.params.id);
-  if (!account) {
-    res.status(404).json({ success: false, message: 'الحساب غير موجود' });
-    return;
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const account = await prisma.pesAccount.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!account) {
+      res.status(404).json({ success: false, message: 'الحساب غير موجود' });
+      return;
+    }
+
+    let players: string[] = [];
+    try {
+      players = JSON.parse(account.highlightPlayers);
+    } catch {
+      players = [];
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...account,
+        platform: account.platform as 'android' | 'ios',
+        highlightPlayers: players,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل جلب الحساب', error: error.message });
   }
-  res.json({ success: true, data: account });
 });
 
-// 3. POST /api/pes-accounts (إضافة حساب جديد من لوحة التحكم)
-router.post('/', authenticate, authorizeRoles('admin'), (req: Request, res: Response) => {
+// 3. POST /api/pes-accounts (إضافة حساب جديد إلى قاعدة البيانات من لوحة التحكم)
+router.post('/', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
   try {
     const {
       title,
@@ -123,7 +137,7 @@ router.post('/', authenticate, authorizeRoles('admin'), (req: Request, res: Resp
       badge,
       imageUrl,
       details,
-      featured
+      featured,
     } = req.body;
 
     if (!title || !price || !platform) {
@@ -131,127 +145,175 @@ router.post('/', authenticate, authorizeRoles('admin'), (req: Request, res: Resp
       return;
     }
 
-    const accounts = readAccounts();
     const newId = `pes-${Date.now().toString().slice(-4)}`;
+    const playersArray = Array.isArray(highlightPlayers)
+      ? highlightPlayers
+      : highlightPlayers
+      ? String(highlightPlayers).split(',').map((s) => s.trim())
+      : ['Messi', 'Ronaldo'];
 
-    const newAccount: PesAccount = {
-      id: newId,
-      title: title.trim(),
-      platform: platform === 'ios' ? 'ios' : 'android',
-      price: Number(price),
-      oldPrice: oldPrice ? Number(oldPrice) : undefined,
-      currency: 'EGP',
-      teamStrength: Number(teamStrength) || 3150,
-      coins: Number(coins) || 0,
-      gp: gp ? String(gp) : '1M',
-      epicCount: Number(epicCount) || 10,
-      highlightPlayers: Array.isArray(highlightPlayers)
-        ? highlightPlayers
-        : (highlightPlayers ? String(highlightPlayers).split(',').map(s => s.trim()) : ['Messi', 'Ronaldo']),
-      loginMethod: loginMethod ? String(loginMethod) : 'Konami ID كامل البيانات والتغيير متاح',
-      isAvailable: true,
-      featured: Boolean(featured),
-      badge: badge ? String(badge) : undefined,
-      imageUrl: imageUrl && String(imageUrl).startsWith('http')
-        ? String(imageUrl)
-        : 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&auto=format&fit=crop&q=80',
-      details: details ? String(details) : 'تشكيلة بيس مميزة بأعلى قوة وتناغم كامل.'
-    };
-
-    accounts.unshift(newAccount);
-    writeAccounts(accounts);
+    const created = await prisma.pesAccount.create({
+      data: {
+        id: newId,
+        title: String(title).trim(),
+        platform: platform === 'ios' ? 'ios' : 'android',
+        price: Number(price),
+        oldPrice: oldPrice ? Number(oldPrice) : null,
+        currency: 'EGP',
+        teamStrength: Number(teamStrength) || 3150,
+        coins: Number(coins) || 0,
+        gp: gp ? String(gp) : '1M',
+        epicCount: Number(epicCount) || 10,
+        highlightPlayers: JSON.stringify(playersArray),
+        loginMethod: loginMethod ? String(loginMethod) : 'Konami ID كامل البيانات والتغيير متاح',
+        isAvailable: true,
+        featured: Boolean(featured),
+        badge: badge ? String(badge) : null,
+        imageUrl: imageUrl && String(imageUrl).startsWith('http')
+          ? String(imageUrl)
+          : 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&auto=format&fit=crop&q=80',
+        details: details ? String(details) : 'تشكيلة بيس مميزة بأعلى قوة وتناغم كامل.',
+      },
+    });
 
     res.status(201).json({
       success: true,
-      message: 'تم إضافة الحساب بنجاح وعرضه في المتجر ✅',
-      data: newAccount
+      message: 'تم حفظ الحساب في قاعدة البيانات بنجاح وعرضه في المتجر ✅',
+      data: {
+        ...created,
+        platform: created.platform as 'android' | 'ios',
+        highlightPlayers: playersArray,
+      },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'فشل حفظ الحساب', error: error.message });
+    res.status(500).json({ success: false, message: 'فشل حفظ الحساب في قاعدة البيانات', error: error.message });
   }
 });
 
-// 4. PUT /api/pes-accounts/:id (تعديل حساب)
-router.put('/:id', authenticate, authorizeRoles('admin'), (req: Request, res: Response) => {
+// 4. PUT /api/pes-accounts/:id (تعديل حساب في قاعدة البيانات)
+router.put('/:id', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
   try {
-    const accounts = readAccounts();
-    const index = accounts.findIndex(a => a.id === req.params.id);
+    const existing = await prisma.pesAccount.findUnique({
+      where: { id: req.params.id },
+    });
 
-    if (index === -1) {
+    if (!existing) {
       res.status(404).json({ success: false, message: 'الحساب غير موجود' });
       return;
     }
 
-    const existing = accounts[index];
-    const updated: PesAccount = {
-      ...existing,
-      ...req.body,
-      id: existing.id, // الحفاظ على نفس الـ ID
-      price: req.body.price !== undefined ? Number(req.body.price) : existing.price,
-      teamStrength: req.body.teamStrength !== undefined ? Number(req.body.teamStrength) : existing.teamStrength,
-      coins: req.body.coins !== undefined ? Number(req.body.coins) : existing.coins,
-      epicCount: req.body.epicCount !== undefined ? Number(req.body.epicCount) : existing.epicCount,
-      highlightPlayers: Array.isArray(req.body.highlightPlayers)
-        ? req.body.highlightPlayers
-        : (req.body.highlightPlayers ? String(req.body.highlightPlayers).split(',').map((s: string) => s.trim()) : existing.highlightPlayers)
-    };
+    const dataToUpdate: any = {};
+    if (req.body.title !== undefined) dataToUpdate.title = String(req.body.title).trim();
+    if (req.body.platform !== undefined) dataToUpdate.platform = req.body.platform === 'ios' ? 'ios' : 'android';
+    if (req.body.price !== undefined) dataToUpdate.price = Number(req.body.price);
+    if (req.body.oldPrice !== undefined) dataToUpdate.oldPrice = req.body.oldPrice ? Number(req.body.oldPrice) : null;
+    if (req.body.teamStrength !== undefined) dataToUpdate.teamStrength = Number(req.body.teamStrength);
+    if (req.body.coins !== undefined) dataToUpdate.coins = Number(req.body.coins);
+    if (req.body.gp !== undefined) dataToUpdate.gp = String(req.body.gp);
+    if (req.body.epicCount !== undefined) dataToUpdate.epicCount = Number(req.body.epicCount);
+    if (req.body.loginMethod !== undefined) dataToUpdate.loginMethod = String(req.body.loginMethod);
+    if (req.body.isAvailable !== undefined) dataToUpdate.isAvailable = Boolean(req.body.isAvailable);
+    if (req.body.featured !== undefined) dataToUpdate.featured = Boolean(req.body.featured);
+    if (req.body.badge !== undefined) dataToUpdate.badge = req.body.badge ? String(req.body.badge) : null;
+    if (req.body.imageUrl !== undefined) dataToUpdate.imageUrl = String(req.body.imageUrl);
+    if (req.body.details !== undefined) dataToUpdate.details = String(req.body.details);
 
-    accounts[index] = updated;
-    writeAccounts(accounts);
+    if (req.body.highlightPlayers !== undefined) {
+      const playersArray = Array.isArray(req.body.highlightPlayers)
+        ? req.body.highlightPlayers
+        : String(req.body.highlightPlayers).split(',').map((s) => s.trim());
+      dataToUpdate.highlightPlayers = JSON.stringify(playersArray);
+    }
+
+    const updated = await prisma.pesAccount.update({
+      where: { id: req.params.id },
+      data: dataToUpdate,
+    });
+
+    let players: string[] = [];
+    try {
+      players = JSON.parse(updated.highlightPlayers);
+    } catch {
+      players = [];
+    }
 
     res.json({
       success: true,
-      message: 'تم تعديل بيانات الحساب بنجاح ✅',
-      data: updated
+      message: 'تم تعديل بيانات الحساب في قاعدة البيانات بنجاح ✅',
+      data: {
+        ...updated,
+        platform: updated.platform as 'android' | 'ios',
+        highlightPlayers: players,
+      },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'فشل تعديل الحساب', error: error.message });
+    res.status(500).json({ success: false, message: 'فشل تعديل الحساب في قاعدة البيانات', error: error.message });
   }
 });
 
 // 5. PATCH /api/pes-accounts/:id/toggle-paid (تبديل حالة تم الدفع / متاح)
-router.patch('/:id/toggle-paid', authenticate, authorizeRoles('admin'), (req: Request, res: Response) => {
+router.patch('/:id/toggle-paid', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
   try {
-    const accounts = readAccounts();
-    const account = accounts.find(a => a.id === req.params.id);
+    const existing = await prisma.pesAccount.findUnique({
+      where: { id: req.params.id },
+    });
 
-    if (!account) {
+    if (!existing) {
       res.status(404).json({ success: false, message: 'الحساب غير موجود' });
       return;
     }
 
-    account.isAvailable = !account.isAvailable;
-    account.badge = !account.isAvailable ? 'تم الدفع 🔴' : undefined;
+    const nextAvailable = !existing.isAvailable;
+    const nextBadge = !nextAvailable ? 'تم الدفع 🔴' : null;
 
-    writeAccounts(accounts);
+    const updated = await prisma.pesAccount.update({
+      where: { id: req.params.id },
+      data: {
+        isAvailable: nextAvailable,
+        badge: nextBadge,
+      },
+    });
+
+    let players: string[] = [];
+    try {
+      players = JSON.parse(updated.highlightPlayers);
+    } catch {
+      players = [];
+    }
 
     res.json({
       success: true,
-      message: account.isAvailable ? 'تمت إعادة الحساب متاحاً للبيع 🟢' : 'تم تعيين الحساب كـ مدفوع / مباع 🔴',
-      data: account
+      message: updated.isAvailable ? 'تمت إعادة الحساب متاحاً للبيع 🟢' : 'تم تعيين الحساب كـ مدفوع / مباع 🔴',
+      data: {
+        ...updated,
+        platform: updated.platform as 'android' | 'ios',
+        highlightPlayers: players,
+      },
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'فشل تغيير حالة الحساب', error: error.message });
   }
 });
 
-// 6. DELETE /api/pes-accounts/:id (حذف الحساب)
-router.delete('/:id', authenticate, authorizeRoles('admin'), (req: Request, res: Response) => {
+// 6. DELETE /api/pes-accounts/:id (حذف الحساب من قاعدة البيانات)
+router.delete('/:id', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
   try {
-    let accounts = readAccounts();
-    const initialLen = accounts.length;
-    accounts = accounts.filter(a => a.id !== req.params.id);
+    const existing = await prisma.pesAccount.findUnique({
+      where: { id: req.params.id },
+    });
 
-    if (accounts.length === initialLen) {
+    if (!existing) {
       res.status(404).json({ success: false, message: 'الحساب غير موجود' });
       return;
     }
 
-    writeAccounts(accounts);
+    await prisma.pesAccount.delete({
+      where: { id: req.params.id },
+    });
 
     res.json({
       success: true,
-      message: 'تم حذف الحساب بنجاح 🗑️'
+      message: 'تم حذف الحساب من قاعدة البيانات بنجاح 🗑️',
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'فشل حذف الحساب', error: error.message });

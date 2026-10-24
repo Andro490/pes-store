@@ -12,6 +12,15 @@ dist/
 !.env.example
 !*/.env.example
 
+# Database (لحماية بيانات المنتجات على السيرفر من المسح)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+backend/prisma/*.db
+backend/prisma/*.db-journal
+backend/data/accounts.json
+
 # Logs & Debugging
 *.log
 npm-debug.log*

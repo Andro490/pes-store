@@ -7,10 +7,12 @@ echo "🚀 بدء عملية تحديث ونشر المشروع..."
 echo "📦 سحب التحديثات من Git..."
 git pull origin main
 
-# 2. بناء الـ Backend
-echo "⚙️ تثبيت وبناء الـ Backend..."
+# 2. بناء الـ Backend وتجهيز قاعدة البيانات
+echo "⚙️ تثبيت وبناء الـ Backend وتجهيز قاعدة البيانات..."
 cd backend
 npm install --production=false
+npx prisma generate
+npx prisma db push
 npm run build
 cd ..
 
