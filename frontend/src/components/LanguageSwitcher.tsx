@@ -1,6 +1,5 @@
 import React from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
-import type { Currency } from '../i18n/LanguageContext';
 
 interface LanguageSwitcherProps {
   className?: string;

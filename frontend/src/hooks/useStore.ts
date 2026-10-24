@@ -24,7 +24,7 @@ export interface UseStoreReturn {
 }
 
 export function useStore(): UseStoreReturn {
-  const { t, formatPrice } = useLanguage();
+  const { t } = useLanguage();
 
   const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
   const [selectedAccountForView, setSelectedAccountForView] = useState<PesAccount | null>(null);
