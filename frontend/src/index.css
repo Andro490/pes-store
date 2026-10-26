@@ -922,12 +922,6 @@ body {
   text-align: left;
 }
 
-.coins-sub-txt {
-  font-size: 10px;
-  color: #fbbf24;
-  font-weight: 700;
-}
-
 .coins-val-num {
   font-size: 14px;
   font-weight: 900;
@@ -940,8 +934,8 @@ body {
 
 /* eFootball Coin Image Icon with bounce */
 .coin-img-icon {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
   animation: coinBounce 1.8s ease-in-out infinite;
   filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
@@ -951,6 +945,32 @@ body {
 .account-square-card.card-hovered .coin-img-icon {
   animation: coinBounce 0.8s ease-in-out infinite;
   filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.9));
+}
+
+/* Small coin in the label row */
+.coins-sub-txt {
+  font-size: 10px;
+  color: #fbbf24;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 2px;
+}
+
+.coin-img-label {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+  animation: coinSpin 3s linear infinite;
+  filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5));
+}
+
+@keyframes coinSpin {
+  0%   { transform: rotateY(0deg); }
+  40%  { transform: rotateY(180deg); }
+  60%  { transform: rotateY(180deg); }
+  100% { transform: rotateY(360deg); }
 }
 
 @keyframes coinBounce {

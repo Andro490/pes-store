@@ -82,10 +82,13 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
             </div>
 
             <div className="coins-pill-box">
-              <div className="coins-sub-txt">{t('coinsBalance')}</div>
+              <div className="coins-sub-txt">
+                <img src="/efootball-coin.png" alt="coin" className="coin-img-label" />
+                {t('coinsBalance')}
+              </div>
               <div className="coins-val-num">
-                <img src="/efootball-coin.png" alt="eFootball Coin" className="coin-img-icon" />
                 <span>{account.coins}</span>
+                <img src="/efootball-coin.png" alt="eFootball Coin" className="coin-img-icon" />
               </div>
             </div>
           </div>
