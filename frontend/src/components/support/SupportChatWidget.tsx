@@ -9,51 +9,10 @@ export function SupportChatWidget() {
   const [messageText, setMessageText] = useState('');
   const [messages, setMessages] = useState<SupportMessageItem[]>([]);
   const [isSending, setIsSending] = useState(false);
-  const [unreadAdminCount, setUnreadAdminCount] = useState<number>(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Poll messages every 4s if phone is set
-  useEffect(() => {
-    if (!phone) return;
-
-    let isMounted = true;
-    const fetchChat = async () => {
-      try {
-        const res = await supportApi.getMessages(phone);
-        if (res.success && isMounted) {
-          setMessages(res.data);
-
-          // Calculate unread admin messages
-          if (!isOpen) {
-            const lastSeen = localStorage.getItem('pes_support_last_seen') || '1970-01-01T00:00:00Z';
-            const unread = res.data.filter(
-              (m) => m.sender === 'admin' && m.createdAt > lastSeen
-            ).length;
-            setUnreadAdminCount(unread);
-          } else {
-            // When open, mark all as seen
-            localStorage.setItem('pes_support_last_seen', new Date().toISOString());
-            setUnreadAdminCount(0);
-          }
-        }
-      } catch {
-        // Silent fail on background poll
-      }
-    };
-
-    fetchChat();
-    const interval = setInterval(fetchChat, 3000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [phone, isOpen]);
-
-  // When opening widget, clear unread count
   useEffect(() => {
     if (isOpen) {
-      localStorage.setItem('pes_support_last_seen', new Date().toISOString());
-      setUnreadAdminCount(0);
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [isOpen]);
@@ -136,30 +95,6 @@ export function SupportChatWidget() {
       >
         <span style={{ fontSize: '18px' }}>💬</span>
         <span>الدعم الفني</span>
-        {unreadAdminCount > 0 && (
-          <span
-            style={{
-              position: 'absolute',
-              top: '-8px',
-              right: '-6px',
-              background: '#ef4444',
-              color: '#fff',
-              borderRadius: '50%',
-              minWidth: '22px',
-              height: '22px',
-              padding: '0 6px',
-              fontSize: '12px',
-              fontWeight: 900,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.7)',
-              border: '2px solid #fff',
-            }}
-          >
-            {unreadAdminCount}
-          </span>
-        )}
       </button>
 
       {/* Chat Window Modal */}
@@ -311,7 +246,7 @@ export function SupportChatWidget() {
                 مرحباً بك! كيف يمكننا مساعدتك اليوم؟
               </div>
               <div style={{ color: '#64748b', fontSize: '11px', marginTop: '4px' }}>
-                اكتب استفسارك وسيرد عليك فريق الدعم فوراً
+                يمكنك إرسال رسالتك لفريق الدعم. عرض الردود داخل المتجر معطل لحماية خصوصية المحادثات
               </div>
             </div>
 

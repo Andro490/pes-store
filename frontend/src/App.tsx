@@ -105,19 +105,30 @@ export default function App() {
       const txId = params.get('id');
 
       let accountId = params.get('account_id');
+      let claimToken: string | undefined;
       if (!accountId) {
         try {
           const pending = localStorage.getItem('pes_pending_purchase');
           if (pending) {
             const parsed = JSON.parse(pending);
             accountId = parsed.accountId;
+            claimToken = parsed.claimToken;
+          }
+        } catch {
+          // ignore storage error
+        }
+      } else {
+        try {
+          const pending = localStorage.getItem('pes_pending_purchase');
+          if (pending) {
+            claimToken = JSON.parse(pending).claimToken;
           }
         } catch {
           // ignore storage error
         }
       }
 
-      if (isSuccess && txId && accountId) {
+      if (isSuccess && txId && accountId && claimToken) {
         if (verifyingTxRef.current === txId) {
           return; // تم إرسال الطلب بالفعل، منع التكرار بالتوازي (Strict Mode)
         }
@@ -127,6 +138,7 @@ export default function App() {
         paymobApi.verifyAndDeliver({
           transactionId: txId,
           accountId,
+          claimToken,
         })
           .then((res) => {
             if (res.success && res.data?.deliveredAccount) {
@@ -136,6 +148,10 @@ export default function App() {
                 message: 'تم تأكيد الدفع من Paymob بنجاح! تم استلام بيانات حسابك 🎉',
               });
               fetchAccounts(); // تحديث قائمة الحسابات لخصم المخزون
+              try {
+                localStorage.removeItem('pes_pending_purchase');
+              } catch {}
+              window.history.replaceState({}, document.title, window.location.pathname);
             } else {
               setPaymentBanner({
                 type: 'error',
@@ -151,12 +167,12 @@ export default function App() {
           })
           .finally(() => {
             setIsVerifyingPayment(false);
-            try {
-              localStorage.removeItem('pes_pending_purchase');
-            } catch {}
-            // تنظيف الرابط حتى لا يعيد الفحص عند عمل Refresh
-            window.history.replaceState({}, document.title, window.location.pathname);
           });
+      } else if (isSuccess && txId) {
+        setPaymentBanner({
+          type: 'error',
+          message: 'تعذر التحقق من بيانات الطلب في هذا المتصفح. أعد فتح صفحة الدفع الأصلية أو تواصل مع الدعم.',
+        });
       } else if (params.get('success') === 'false') {
         setPaymentBanner({
           type: 'error',

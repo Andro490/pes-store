@@ -183,11 +183,15 @@ export class PaymobService {
       );
 
       const clientSecret = res.client_secret;
+      const orderId = res.intention_order?.id;
+      if (!clientSecret || orderId === undefined || orderId === null) {
+        throw new Error('استجابة Paymob لا تحتوي على بيانات طلب دفع صالحة');
+      }
       const checkoutUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${publicKey}&clientSecret=${clientSecret}`;
 
       return {
         success: true,
-        orderId: res.id || res.intention_order?.id || Date.now(),
+        orderId: String(orderId),
         clientSecret,
         checkoutUrl,
         paymentUrl: checkoutUrl
@@ -203,7 +207,8 @@ export class PaymobService {
    */
   public static async verifyTransaction(transactionId: string | number): Promise<{
     isSuccess: boolean;
-    amountEgp: number;
+    amountCents: number;
+    currency: string;
     transaction: any;
   }> {
     try {
@@ -222,11 +227,13 @@ export class PaymobService {
         tx.is_refunded === false &&
         tx.pending === false;
 
-      const amountEgp = (tx.amount_cents || 0) / 100;
+      const amountCents = Number(tx.amount_cents);
+      const currency = String(tx.currency || '');
 
       return {
         isSuccess: Boolean(isSuccess),
-        amountEgp,
+        amountCents,
+        currency,
         transaction: tx
       };
     } catch (err: any) {

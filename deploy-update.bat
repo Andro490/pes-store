@@ -35,11 +35,13 @@ scp "backend\package.json" root@72.60.190.38:/var/www/pes-store/backend/
 scp -r "frontend\dist" root@72.60.190.38:/var/www/pes-store/frontend/
 scp -r "backend\dist" root@72.60.190.38:/var/www/pes-store/backend/
 scp -r "backend\src" root@72.60.190.38:/var/www/pes-store/backend/
+ssh root@72.60.190.38 "mkdir -p /var/www/pes-store/backend/prisma"
+scp "backend\prisma\schema.prisma" root@72.60.190.38:/var/www/pes-store/backend/prisma/schema.prisma
 scp -r "frontend\src" root@72.60.190.38:/var/www/pes-store/frontend/
 
 echo.
-echo [4/4] تثبيت حزم الأمان وإعادة تشغيل الباك إند (PM2 Restart)...
-ssh root@72.60.190.38 "cd /var/www/pes-store/backend && npm install --omit=dev && pm2 restart pes-store-backend || pm2 start /var/www/pes-store/ecosystem.config.js"
+echo [4/4] تحديث قاعدة البيانات وإعادة تشغيل الباك إند (PM2 Restart)...
+ssh root@72.60.190.38 "cd /var/www/pes-store/backend && npm install && npx prisma generate && npx prisma db push && npm prune --omit=dev && (pm2 restart pes-store-backend || pm2 start /var/www/pes-store/ecosystem.config.js)"
 
 echo.
 echo ========================================================

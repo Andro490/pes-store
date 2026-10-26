@@ -364,38 +364,6 @@ router.delete('/:id', authenticate, authorizeRoles('admin'), async (req: Request
   }
 });
 
-// 7. POST /api/pes-accounts/:id/buy (شراء فوري وتسليم حساب واحد وحذفه من المخزون)
-router.post('/:id/buy', async (req: Request, res: Response) => {
-  try {
-    const { buyerPhone } = req.body;
-    const account = await prisma.pesAccount.findUnique({ where: { id: req.params.id } });
-
-    if (!account) {
-      res.status(404).json({ success: false, message: 'الحساب غير موجود' });
-      return;
-    }
-
-    const cleanPhone = typeof buyerPhone === 'string' ? buyerPhone.trim() : '';
-    if (!cleanPhone || !/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
-      res.status(400).json({ success: false, message: 'يرجى تقديم رقم هاتف صحيح لإتمام الشراء' });
-      return;
-    }
-
-    const result = await StockService.purchaseAndDeliverOne(req.params.id, cleanPhone);
-
-    res.json({
-      success: true,
-      message: 'تم إتمام الشراء بنجاح وتسليم بيانات الحساب فوراً! 🚀🎉',
-      data: result,
-    });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || 'فشل إتمام الشراء',
-    });
-  }
-});
-
 // 8. GET /api/pes-accounts/:id/stock (جلب المخزون لهذا الحساب - للوحة الأدمن)
 router.get('/:id/stock', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
   try {

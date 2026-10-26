@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 import { prisma } from '../services/prisma.service';
 import { authenticate, authorizeRoles } from '../middleware/auth.middleware';
 
@@ -8,47 +7,6 @@ const router = Router();
 function normalizePhone(phone: string): string {
   return String(phone).trim().replace(/[^\d+]/g, '').slice(0, 30);
 }
-
-function generateChatToken(phone: string): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET is not configured');
-  }
-  return jwt.sign({ phone: normalizePhone(phone), role: 'chat_user' }, secret, { expiresIn: '60d' });
-}
-
-function verifyChatAccess(req: Request, targetPhone: string): boolean {
-  const cleanTarget = normalizePhone(targetPhone);
-  const token = (req.headers['x-chat-token'] as string) ||
-    (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : undefined) ||
-    (req as any).cookies?.admin_token;
-
-  if (!token) return false;
-
-  try {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) return false;
-    const decoded = jwt.verify(token, secret) as any;
-    if (decoded.role === 'admin') return true;
-    if (decoded.phone && normalizePhone(decoded.phone) === cleanTarget) return true;
-  } catch {
-    return false;
-  }
-
-  return false;
-}
-
-// 0. POST /api/support/session (Issue secure token for customer's phone number)
-router.post('/session', (req: Request, res: Response) => {
-  const { phone } = req.body;
-  const cleanPhone = normalizePhone(phone);
-  if (!cleanPhone || cleanPhone.length < 5 || !/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
-    res.status(400).json({ success: false, message: 'رقم هاتف غير صالح' });
-    return;
-  }
-
-  res.json({ success: true, chatToken: generateChatToken(cleanPhone) });
-});
 
 // 1. POST /api/support/message (User sends a message with mandatory phone)
 router.post('/message', async (req: Request, res: Response) => {
@@ -98,16 +56,15 @@ router.post('/message', async (req: Request, res: Response) => {
       });
     }
 
-    const chatToken = generateChatToken(cleanPhone);
-    res.json({ success: true, data: created, chatToken });
+    res.json({ success: true, data: created });
   } catch (error: any) {
     console.error('Support message error:', error);
     res.status(500).json({ success: false, message: 'فشل إرسال الرسالة' });
   }
 });
 
-// 2. GET /api/support/messages/:phone (User fetches their chat messages with verification)
-router.get('/messages/:phone', async (req: Request, res: Response) => {
+// 2. GET /api/support/messages/:phone (Admin reads a conversation)
+router.get('/messages/:phone', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
   try {
     const { phone } = req.params;
 
@@ -120,14 +77,6 @@ router.get('/messages/:phone', async (req: Request, res: Response) => {
 
     if (!cleanPhone || !/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
       res.status(400).json({ success: false, message: 'رقم الموبايل مطلوب' });
-      return;
-    }
-
-    if (!verifyChatAccess(req, cleanPhone)) {
-      res.status(403).json({
-        success: false,
-        message: 'غير مصرح بالاطلاع على هذه المحادثة الخاصة.',
-      });
       return;
     }
 

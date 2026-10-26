@@ -78,6 +78,7 @@ export function useStore(): UseStoreReturn {
                 accountId: purchaseSuccessAccount.id,
                 accountTitle: purchaseSuccessAccount.title,
                 price: purchaseSuccessAccount.price,
+                claimToken: res.data.claimToken,
                 timestamp: Date.now(),
               })
             );

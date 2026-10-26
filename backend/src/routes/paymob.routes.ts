@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import { PaymobService } from '../services/paymob.service';
 import { StockService } from '../services/stock.service';
 import { prisma } from '../services/prisma.service';
@@ -8,10 +9,10 @@ const router = Router();
 // POST /api/paymob/initiate
 router.post('/initiate', async (req: Request, res: Response) => {
   try {
-    const { accountId, accountTitle, amountEgp, customer } = req.body;
+    const { accountId, customer } = req.body;
 
-    if (!accountId || !amountEgp) {
-      res.status(400).json({ success: false, message: 'بيانات الحساب والسعر مطلوبة' });
+    if (typeof accountId !== 'string' || !accountId.trim()) {
+      res.status(400).json({ success: false, message: 'معرّف الحساب مطلوب' });
       return;
     }
 
@@ -26,6 +27,12 @@ router.post('/initiate', async (req: Request, res: Response) => {
       return;
     }
 
+    const amountEgp = Number(account.price);
+    if (account.currency !== 'EGP' || !Number.isFinite(amountEgp) || amountEgp <= 0) {
+      res.status(400).json({ success: false, message: 'سعر أو عملة الحساب غير صالحة للدفع' });
+      return;
+    }
+
     if (!account.isAvailable || stockCount === 0) {
       res.status(400).json({
         success: false,
@@ -36,8 +43,8 @@ router.post('/initiate', async (req: Request, res: Response) => {
 
     const session = await PaymobService.createPaymentSession({
       accountId,
-      accountTitle: accountTitle || 'حساب بيس eFootball',
-      amountEgp: Number(amountEgp),
+      accountTitle: account.title,
+      amountEgp,
       customer: customer || {
         firstName: 'عميل',
         lastName: 'بيس',
@@ -45,10 +52,21 @@ router.post('/initiate', async (req: Request, res: Response) => {
         phone: '+201000000000'
       }
     });
+    const claimToken = randomBytes(32).toString('hex');
+
+    await prisma.paymobPayment.create({
+      data: {
+        orderId: session.orderId,
+        accountId: account.id,
+        amountCents: Math.round(amountEgp * 100),
+        currency: account.currency,
+        claimTokenHash: createHash('sha256').update(claimToken).digest('hex'),
+      },
+    });
 
     res.json({
       success: true,
-      data: session
+      data: { ...session, claimToken }
     });
   } catch (error: any) {
     res.status(500).json({
@@ -63,19 +81,20 @@ router.post('/initiate', async (req: Request, res: Response) => {
 // التحقق من إتمام الدفع مع Paymob وتسليم بيانات الحساب تلقائياً للمشتري
 router.post('/verify-and-deliver', async (req: Request, res: Response) => {
   try {
-    const { transactionId, accountId, buyerPhone } = req.body;
+    const { transactionId, accountId, claimToken } = req.body;
 
-    if (!transactionId || !accountId) {
+    if (
+      (typeof transactionId !== 'string' && typeof transactionId !== 'number') ||
+      !/^[0-9]+$/.test(String(transactionId)) ||
+      typeof accountId !== 'string' ||
+      !accountId.trim() ||
+      typeof claimToken !== 'string' ||
+      !/^[a-f0-9]{64}$/i.test(claimToken)
+    ) {
       res.status(400).json({
         success: false,
         message: 'رقم المعاملة (Transaction ID) ومعرّف الحساب مطلوبان'
       });
-      return;
-    }
-
-    const account = await prisma.pesAccount.findUnique({ where: { id: accountId } });
-    if (!account) {
-      res.status(404).json({ success: false, message: 'الحساب المطلوب غير موجود' });
       return;
     }
 
@@ -89,17 +108,51 @@ router.post('/verify-and-deliver', async (req: Request, res: Response) => {
       return;
     }
 
-    const expectedAmount = Number(account.price);
-    const actualAmount = Number(verifyResult.amountEgp);
-    if (!Number.isFinite(actualAmount) || actualAmount <= 0 || Math.abs(actualAmount - expectedAmount) > 0.01) {
+    const orderId = verifyResult.transaction?.order?.id;
+    if (orderId === undefined || orderId === null) {
       res.status(400).json({
         success: false,
-        message: `مبلغ الدفع غير مطابق لسعر الحساب. السعر المتوقع: ${expectedAmount} EGP`
+        message: 'تعذر ربط المعاملة بطلب دفع صالح'
       });
       return;
     }
 
-    const phone = buyerPhone ||
+    const payment = await prisma.paymobPayment.findUnique({ where: { orderId: String(orderId) } });
+    if (!payment || payment.accountId !== accountId) {
+      res.status(400).json({ success: false, message: 'المعاملة لا تخص هذا الحساب أو طلباً مسجلاً' });
+      return;
+    }
+
+    const suppliedTokenHash = createHash('sha256').update(claimToken).digest();
+    const storedTokenHash = Buffer.from(payment.claimTokenHash, 'hex');
+    if (
+      storedTokenHash.length !== suppliedTokenHash.length ||
+      !timingSafeEqual(storedTokenHash, suppliedTokenHash)
+    ) {
+      res.status(403).json({ success: false, message: 'بيانات استلام الطلب غير صالحة' });
+      return;
+    }
+
+    if (
+      verifyResult.amountCents !== payment.amountCents ||
+      verifyResult.currency !== payment.currency
+    ) {
+      res.status(400).json({ success: false, message: 'مبلغ أو عملة الدفع غير مطابقة لطلب الشراء' });
+      return;
+    }
+
+    const account = await prisma.pesAccount.findUnique({ where: { id: payment.accountId } });
+    if (!account) {
+      res.status(404).json({ success: false, message: 'الحساب المطلوب غير موجود' });
+      return;
+    }
+
+    await prisma.paymobPayment.update({
+      where: { orderId: payment.orderId },
+      data: { transactionId: String(transactionId) },
+    });
+
+    const phone =
       verifyResult.transaction?.order?.shipping_data?.phone_number ||
       verifyResult.transaction?.billing_data?.phone_number ||
       undefined;

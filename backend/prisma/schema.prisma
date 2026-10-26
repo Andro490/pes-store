@@ -60,6 +60,18 @@ model SoldAccount {
   @@map("sold_accounts")
 }
 
+model PaymobPayment {
+  orderId        String   @id
+  accountId      String
+  amountCents    Int
+  currency       String   @default("EGP")
+  claimTokenHash String
+  transactionId  String?  @unique
+  createdAt      DateTime @default(now())
+
+  @@map("paymob_payments")
+}
+
 model SupportMessage {
   id        String   @id @default(uuid())
   phone     String
@@ -70,4 +82,3 @@ model SupportMessage {
 
   @@map("support_messages")
 }
-
