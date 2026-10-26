@@ -187,6 +187,16 @@ export default function App() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // إخفاء إشعار الدفع تلقائياً بعد 7 ثوانٍ حتى لا يظل معلقاً في الشاشة
+  useEffect(() => {
+    if (paymentBanner) {
+      const timer = setTimeout(() => {
+        setPaymentBanner(null);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [paymentBanner]);
+
   return (
     <div className="app-wrapper">
       {/* Background glow orbs */}
