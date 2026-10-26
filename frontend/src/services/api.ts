@@ -68,13 +68,13 @@ export const pesAccountsApi = {
   getById: async (id: string): Promise<{ success: boolean; data: PesAccount }> => {
     return request(`/pes-accounts/${id}`);
   },
-  create: async (data: Partial<PesAccount>): Promise<{ success: boolean; message: string; data: PesAccount }> => {
+  create: async (data: any): Promise<{ success: boolean; message: string; data: PesAccount }> => {
     return request('/pes-accounts', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
-  update: async (id: string, data: Partial<PesAccount>): Promise<{ success: boolean; message: string; data: PesAccount }> => {
+  update: async (id: string, data: any): Promise<{ success: boolean; message: string; data: PesAccount }> => {
     return request(`/pes-accounts/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -89,7 +89,27 @@ export const pesAccountsApi = {
     return request(`/pes-accounts/${id}`, {
       method: 'DELETE',
     });
-  }
+  },
+  buy: async (id: string, buyerPhone?: string): Promise<{ success: boolean; message: string; data: { deliveredAccount: any; remainingStock: number } }> => {
+    return request(`/pes-accounts/${id}/buy`, {
+      method: 'POST',
+      body: JSON.stringify({ buyerPhone }),
+    });
+  },
+  getStock: async (id: string): Promise<{ success: boolean; data: { count: number; stocks: any[] } }> => {
+    return request(`/pes-accounts/${id}/stock`);
+  },
+  addStock: async (id: string, bulkAccounts: string): Promise<{ success: boolean; message: string; data: any }> => {
+    return request(`/pes-accounts/${id}/stock`, {
+      method: 'POST',
+      body: JSON.stringify({ bulkAccounts }),
+    });
+  },
+  deleteStockItem: async (stockId: string): Promise<{ success: boolean; message: string }> => {
+    return request(`/pes-accounts/stock/${stockId}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // ─── Paymob API ───────────────────────────────────────────────────────────────
@@ -105,5 +125,16 @@ export const paymobApi = {
       body: JSON.stringify(params),
     });
   },
+  verifyAndDeliver: async (params: {
+    transactionId: string | number;
+    accountId: string;
+    buyerPhone?: string;
+  }): Promise<{ success: boolean; message: string; data: { deliveredAccount: any; alreadyDelivered?: boolean } }> => {
+    return request('/paymob/verify-and-deliver', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
 };
+
 

@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { authenticate, authorizeRoles } from '../middleware/auth.middleware';
 import { prisma } from '../services/prisma.service';
+import { StockService } from '../services/stock.service';
 
 export interface PesAccount {
   id: string;
@@ -21,6 +22,7 @@ export interface PesAccount {
   badge?: string | null;
   imageUrl: string;
   details: string;
+  stockCount?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -50,6 +52,11 @@ router.get('/', async (req: Request, res: Response) => {
 
     const accounts = await prisma.pesAccount.findMany({
       where,
+      include: {
+        _count: {
+          select: { stocks: true },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -61,10 +68,13 @@ router.get('/', async (req: Request, res: Response) => {
       } catch {
         players = [];
       }
+      const stockCount = acc._count?.stocks ?? 0;
       return {
         ...acc,
         platform: acc.platform as 'android' | 'ios',
         highlightPlayers: players,
+        stockCount,
+        isAvailable: Boolean(acc.isAvailable && stockCount > 0),
       };
     });
 
@@ -93,6 +103,11 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const account = await prisma.pesAccount.findUnique({
       where: { id: req.params.id },
+      include: {
+        _count: {
+          select: { stocks: true },
+        },
+      },
     });
 
     if (!account) {
@@ -107,12 +122,15 @@ router.get('/:id', async (req: Request, res: Response) => {
       players = [];
     }
 
+    const stockCount = account._count?.stocks ?? 0;
     res.json({
       success: true,
       data: {
         ...account,
         platform: account.platform as 'android' | 'ios',
         highlightPlayers: players,
+        stockCount,
+        isAvailable: Boolean(account.isAvailable && stockCount > 0),
       },
     });
   } catch (error: any) {
@@ -138,6 +156,7 @@ router.post('/', authenticate, authorizeRoles('admin'), async (req: Request, res
       imageUrl,
       details,
       featured,
+      bulkAccounts,
     } = req.body;
 
     if (!title || !price || !platform) {
@@ -176,13 +195,20 @@ router.post('/', authenticate, authorizeRoles('admin'), async (req: Request, res
       },
     });
 
+    let stockAdded = 0;
+    if (bulkAccounts && typeof bulkAccounts === 'string') {
+      const stockRes = await StockService.addBulkStock(newId, bulkAccounts);
+      stockAdded = stockRes.addedCount;
+    }
+
     res.status(201).json({
       success: true,
-      message: 'تم حفظ الحساب في قاعدة البيانات بنجاح وعرضه في المتجر ✅',
+      message: `تم حفظ الحساب بنجاح وعرضه في المتجر ✅${stockAdded > 0 ? ` (تمت إضافة ${stockAdded} حسابات للمخزون)` : ''}`,
       data: {
         ...created,
         platform: created.platform as 'android' | 'ios',
         highlightPlayers: playersArray,
+        stockCount: stockAdded,
       },
     });
   } catch (error: any) {
@@ -225,9 +251,20 @@ router.put('/:id', authenticate, authorizeRoles('admin'), async (req: Request, r
       dataToUpdate.highlightPlayers = JSON.stringify(playersArray);
     }
 
+    // Add bulk accounts if passed in edit
+    if (req.body.bulkAccounts && typeof req.body.bulkAccounts === 'string') {
+      await StockService.addBulkStock(req.params.id, req.body.bulkAccounts);
+      dataToUpdate.isAvailable = true;
+    }
+
     const updated = await prisma.pesAccount.update({
       where: { id: req.params.id },
       data: dataToUpdate,
+      include: {
+        _count: {
+          select: { stocks: true },
+        },
+      },
     });
 
     let players: string[] = [];
@@ -244,6 +281,7 @@ router.put('/:id', authenticate, authorizeRoles('admin'), async (req: Request, r
         ...updated,
         platform: updated.platform as 'android' | 'ios',
         highlightPlayers: players,
+        stockCount: updated._count?.stocks ?? 0,
       },
     });
   } catch (error: any) {
@@ -272,6 +310,11 @@ router.patch('/:id/toggle-paid', authenticate, authorizeRoles('admin'), async (r
         isAvailable: nextAvailable,
         badge: nextBadge,
       },
+      include: {
+        _count: {
+          select: { stocks: true },
+        },
+      },
     });
 
     let players: string[] = [];
@@ -288,6 +331,7 @@ router.patch('/:id/toggle-paid', authenticate, authorizeRoles('admin'), async (r
         ...updated,
         platform: updated.platform as 'android' | 'ios',
         highlightPlayers: players,
+        stockCount: updated._count?.stocks ?? 0,
       },
     });
   } catch (error: any) {
@@ -317,6 +361,74 @@ router.delete('/:id', authenticate, authorizeRoles('admin'), async (req: Request
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'فشل حذف الحساب', error: error.message });
+  }
+});
+
+// 7. POST /api/pes-accounts/:id/buy (شراء فوري وتسليم حساب واحد وحذفه من المخزون)
+router.post('/:id/buy', async (req: Request, res: Response) => {
+  try {
+    const { buyerPhone } = req.body;
+    const result = await StockService.purchaseAndDeliverOne(req.params.id, buyerPhone);
+
+    res.json({
+      success: true,
+      message: 'تم إتمام الشراء بنجاح وتسليم بيانات الحساب فوراً! 🚀🎉',
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message || 'فشل إتمام الشراء',
+    });
+  }
+});
+
+// 8. GET /api/pes-accounts/:id/stock (جلب المخزون لهذا الحساب - للوحة الأدمن)
+router.get('/:id/stock', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
+  try {
+    const stockData = await StockService.getStock(req.params.id);
+    res.json({
+      success: true,
+      data: stockData,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل جلب المخزون', error: error.message });
+  }
+});
+
+// 9. POST /api/pes-accounts/:id/stock (إضافة مخزون إضافي لحساب - للوحة الأدمن)
+router.post('/:id/stock', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
+  try {
+    const { bulkAccounts } = req.body;
+    if (!bulkAccounts || typeof bulkAccounts !== 'string') {
+      res.status(400).json({ success: false, message: 'يرجى إرسال بيانات الحسابات بصيغة صحيحة' });
+      return;
+    }
+
+    const result = await StockService.addBulkStock(req.params.id, bulkAccounts);
+    res.json({
+      success: true,
+      message: `تمت إضافة ${result.addedCount} حسابات للمخزون بنجاح!`,
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل إضافة الحسابات للمخزون', error: error.message });
+  }
+});
+
+// 10. DELETE /api/pes-accounts/stock/:stockId (حذف حساب يدوي من المخزون)
+router.delete('/stock/:stockId', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
+  try {
+    const { stockId } = req.params;
+    await prisma.accountStock.delete({
+      where: { id: stockId },
+    });
+    res.json({
+      success: true,
+      message: 'تم حذف الحساب من المخزون بنجاح',
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل حذف الحساب من المخزون', error: error.message });
   }
 });
 

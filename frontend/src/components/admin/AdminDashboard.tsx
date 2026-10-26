@@ -190,6 +190,7 @@ export function AdminDashboard({
               <th style={{ padding: '12px 10px' }}>{t('adminThPrice')}</th>
               <th style={{ padding: '12px 10px' }}>{t('adminThStrength')}</th>
               <th style={{ padding: '12px 10px' }}>{t('adminThCoins')}</th>
+              <th style={{ padding: '12px 10px' }}>المخزون التلقائي</th>
               <th style={{ padding: '12px 10px' }}>{t('adminThStatus')}</th>
               <th style={{ padding: '12px 10px', textAlign: 'center' }}>{t('adminThActions')}</th>
             </tr>
@@ -246,6 +247,22 @@ export function AdminDashboard({
 
                 <td style={{ padding: '14px 10px', fontWeight: 700, color: '#f59e0b' }}>
                   🪙 {account.coins}
+                </td>
+
+                <td style={{ padding: '14px 10px' }}>
+                  <span
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '10px',
+                      background: (account.stockCount ?? 0) > 0 ? 'rgba(56, 189, 248, 0.15)' : 'rgba(239, 68, 68, 0.12)',
+                      color: (account.stockCount ?? 0) > 0 ? '#38bdf8' : '#f87171',
+                      border: `1px solid ${(account.stockCount ?? 0) > 0 ? 'rgba(56, 189, 248, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                      fontSize: '12px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    📦 {account.stockCount ?? 0} حساب
+                  </span>
                 </td>
 
                 <td style={{ padding: '14px 10px' }}>

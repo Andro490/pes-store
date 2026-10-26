@@ -20,6 +20,7 @@ export type AccountFormData = {
   imageUrl: string;
   details: string;
   featured: boolean;
+  bulkAccounts: string;
 };
 
 const DEFAULT_FORM: AccountFormData = {
@@ -38,6 +39,7 @@ const DEFAULT_FORM: AccountFormData = {
     'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&auto=format&fit=crop&q=80',
   details: 'حساب مميز بأعلى قوة تناغم وجاهز للعب الفوري.',
   featured: true,
+  bulkAccounts: '',
 };
 
 export interface UseAccountsReturn {
@@ -158,6 +160,7 @@ export function useAccounts(): UseAccountsReturn {
       imageUrl: account.imageUrl,
       details: account.details,
       featured: account.featured,
+      bulkAccounts: '',
     });
     setIsAccountModalOpen(true);
   }, []);

@@ -50,15 +50,78 @@ const httpsPost = (url: string, headers: Record<string, string>, data: any): Pro
   });
 };
 
+const httpsGet = (url: string, headers: Record<string, string>): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { headers }, res => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(parsed);
+          } else {
+            reject(new Error(parsed.detail || `Paymob error ${res.statusCode}`));
+          }
+        } catch (e) {
+          reject(new Error(`Paymob parse error: ${res.statusCode} ${body}`));
+        }
+      });
+    });
+    req.on('error', reject);
+  });
+};
+
 export class PaymobService {
+  private static cachedAuthToken: { token: string; expiresAt: number } | null = null;
+
   private static getSecretKey() {
     return (process.env.PAYMOB_SECRET_KEY || '').trim();
   }
   private static getPublicKey() {
     return (process.env.PAYMOB_PUBLIC_KEY || '').trim();
   }
+  private static getApiKey() {
+    return (process.env.PAYMOB_API_KEY || '').trim();
+  }
   private static getIntegrationId() {
     return (process.env.PAYMOB_INTEGRATION_ID || '').trim();
+  }
+  private static getClientUrl() {
+    return (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+  }
+
+  /**
+   * جلب توكن المصادقة من Paymob (Classic API) مع تخزينه مؤقتاً
+   */
+  private static async getAuthToken(): Promise<string> {
+    const now = Date.now();
+    if (this.cachedAuthToken && this.cachedAuthToken.expiresAt > now) {
+      return this.cachedAuthToken.token;
+    }
+
+    const apiKey = this.getApiKey();
+    if (!apiKey) {
+      throw new Error('PAYMOB_API_KEY غير موجود في إعدادات الخادم');
+    }
+
+    const res = await httpsPost(
+      'https://accept.paymob.com/api/auth/tokens',
+      {},
+      { api_key: apiKey }
+    );
+
+    if (!res.token) {
+      throw new Error('فشل الحصول على توكن المصادقة من Paymob');
+    }
+
+    // Cache token for 45 minutes
+    this.cachedAuthToken = {
+      token: res.token,
+      expiresAt: now + 45 * 60 * 1000,
+    };
+
+    return res.token;
   }
 
   /**
@@ -69,6 +132,7 @@ export class PaymobService {
       const secretKey = this.getSecretKey();
       const publicKey = this.getPublicKey();
       const integrationIdStr = this.getIntegrationId();
+      const clientUrl = this.getClientUrl();
 
       if (!secretKey || !publicKey) {
         throw new Error('مفاتيح Paymob غير مكتملة في الخادم');
@@ -84,6 +148,9 @@ export class PaymobService {
         email: 'customer@pes-store.com',
         phone: '+201000000000'
       };
+
+      // رابط العودة التلقائية بعد الدفع إلى الموقع
+      const redirectionUrl = `${clientUrl}/?paymob_callback=true&account_id=${encodeURIComponent(params.accountId)}`;
 
       const payload = {
         amount: amountCents,
@@ -103,7 +170,8 @@ export class PaymobService {
         extras: {
           account_id: params.accountId,
           account_title: params.accountTitle
-        }
+        },
+        redirection_url: redirectionUrl
       };
 
       const res = await httpsPost(
@@ -126,6 +194,43 @@ export class PaymobService {
       };
     } catch (err: any) {
       console.error('Paymob Intention Error:', err);
+      throw err;
+    }
+  }
+
+  /**
+   * التحقق من حالة المعاملة عبر Paymob API الرسمي
+   */
+  public static async verifyTransaction(transactionId: string | number): Promise<{
+    isSuccess: boolean;
+    amountEgp: number;
+    transaction: any;
+  }> {
+    try {
+      const token = await this.getAuthToken();
+      const tx = await httpsGet(
+        `https://accept.paymob.com/api/acceptance/transactions/${transactionId}`,
+        {
+          Authorization: `Bearer ${token}`
+        }
+      );
+
+      const isSuccess =
+        tx &&
+        tx.success === true &&
+        tx.is_voided === false &&
+        tx.is_refunded === false &&
+        tx.pending === false;
+
+      const amountEgp = (tx.amount_cents || 0) / 100;
+
+      return {
+        isSuccess: Boolean(isSuccess),
+        amountEgp,
+        transaction: tx
+      };
+    } catch (err: any) {
+      console.error(`Paymob verifyTransaction (${transactionId}) Error:`, err.message);
       throw err;
     }
   }

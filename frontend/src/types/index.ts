@@ -16,6 +16,26 @@ export type PesAccount = {
   badge?: string;
   imageUrl: string;
   details: string;
+  stockCount?: number;
+};
+
+export type DeliveredAccount = {
+  accountId: string;
+  accountTitle: string;
+  email: string;
+  password: string;
+  codeUrl: string;
+  platform: 'android' | 'ios';
+  price: number;
+};
+
+export type BuyAccountResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    deliveredAccount: DeliveredAccount;
+    remainingStock: number;
+  };
 };
 
 export type User = {

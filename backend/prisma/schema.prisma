@@ -28,5 +28,34 @@ model PesAccount {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  stocks           AccountStock[]
+
   @@map("pes_accounts")
+}
+
+model AccountStock {
+  id         String     @id @default(uuid())
+  accountId  String
+  account    PesAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  email      String
+  password   String
+  codeUrl    String
+  createdAt  DateTime   @default(now())
+
+  @@map("account_stocks")
+}
+
+model SoldAccount {
+  id            String   @id @default(uuid())
+  accountId     String
+  accountTitle  String
+  email         String
+  password      String
+  codeUrl       String
+  price         Float
+  buyerPhone    String?
+  transactionId String?  @unique
+  soldAt        DateTime @default(now())
+
+  @@map("sold_accounts")
 }

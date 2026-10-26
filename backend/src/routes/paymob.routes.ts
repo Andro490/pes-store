@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { PaymobService } from '../services/paymob.service';
+import { StockService } from '../services/stock.service';
+import { prisma } from '../services/prisma.service';
 
 const router = Router();
 
@@ -10,6 +12,25 @@ router.post('/initiate', async (req: Request, res: Response) => {
 
     if (!accountId || !amountEgp) {
       res.status(400).json({ success: false, message: 'بيانات الحساب والسعر مطلوبة' });
+      return;
+    }
+
+    // التحقق الصارم من توفر المخزون في قاعدة البيانات قبل إنشاء جلسة الدفع في Paymob
+    const [account, stockCount] = await Promise.all([
+      prisma.pesAccount.findUnique({ where: { id: accountId } }),
+      prisma.accountStock.count({ where: { accountId } }),
+    ]);
+
+    if (!account) {
+      res.status(404).json({ success: false, message: 'الحساب المطلوب غير موجود في المتجر' });
+      return;
+    }
+
+    if (!account.isAvailable || stockCount === 0) {
+      res.status(400).json({
+        success: false,
+        message: 'عذراً! نفد مخزون هذا الحساب بالكامل من المتجر، لا يمكن الدفع لهذا الحساب حالياً 🔴',
+      });
       return;
     }
 
@@ -38,15 +59,71 @@ router.post('/initiate', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/paymob/verify-and-deliver
+// التحقق من إتمام الدفع مع Paymob وتسليم بيانات الحساب تلقائياً للمشتري
+router.post('/verify-and-deliver', async (req: Request, res: Response) => {
+  try {
+    const { transactionId, accountId, buyerPhone } = req.body;
+
+    if (!transactionId || !accountId) {
+      res.status(400).json({
+        success: false,
+        message: 'رقم المعاملة (Transaction ID) ومعرّف الحساب مطلوبان'
+      });
+      return;
+    }
+
+    // 1. التحقق من العملية مباشرة مع خوادم Paymob
+    const verifyResult = await PaymobService.verifyTransaction(transactionId);
+
+    if (!verifyResult.isSuccess) {
+      res.status(400).json({
+        success: false,
+        message: 'عملية الدفع غير مؤكدة أو لم تكتمل بنجاح في Paymob'
+      });
+      return;
+    }
+
+    // 2. سحب الحساب من المخزون وتسليمه فورياً للمشتري (مع منع التكرار باستخدام transactionId)
+    const phone =
+      buyerPhone ||
+      verifyResult.transaction?.order?.shipping_data?.phone_number ||
+      verifyResult.transaction?.billing_data?.phone_number ||
+      undefined;
+
+    const deliveryResult = await StockService.purchaseAndDeliverOne(
+      accountId,
+      phone,
+      String(transactionId)
+    );
+
+    res.json({
+      success: true,
+      message: deliveryResult.alreadyDelivered
+        ? 'تم استرجاع بيانات الحساب المدفوع بنجاح ✅'
+        : 'تم تأكيد الدفع وتسليم الحساب بنجاح! 🚀🎉',
+      data: deliveryResult
+    });
+  } catch (error: any) {
+    console.error('Verify & Deliver Error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'حدث خطأ أثناء تسليم الحساب بعد الدفع'
+    });
+  }
+});
+
 // POST /api/paymob/webhook (Callback من Paymob عند نجاح الدفع)
 router.post('/webhook', (req: Request, res: Response) => {
-  const transaction = req.body.obj;
-  if (transaction && transaction.success === true) {
-    console.log(`\n🎉 عملية دفع ناجحة لطلب رقم: ${transaction.order?.id}`);
-    console.log(`💰 المبلغ: ${transaction.amount_cents / 100} EGP`);
-    console.log(`👤 العميل: ${transaction.order?.shipping_data?.first_name} (${transaction.order?.shipping_data?.phone_number})`);
-    
-    // هنا يتم إرسال بيانات الحساب تلقائياً للعميل
+  try {
+    const transaction = req.body.obj;
+    if (transaction && transaction.success === true) {
+      console.log(`\n🎉 عملية دفع ناجحة عبر Webhook لطلب رقم: ${transaction.order?.id}`);
+      console.log(`💰 المبلغ: ${(transaction.amount_cents || 0) / 100} EGP`);
+      console.log(`🆔 رقم المعاملة: ${transaction.id}`);
+    }
+  } catch (err: any) {
+    console.error('Webhook error:', err);
   }
 
   res.status(200).send('OK');

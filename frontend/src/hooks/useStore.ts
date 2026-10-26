@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { paymobApi } from '../services/api';
 import type { PesAccount } from '../types';
-import { useLanguage } from '../i18n/LanguageContext';
 
 export interface UseStoreReturn {
   // Device selection modal
@@ -18,19 +17,19 @@ export interface UseStoreReturn {
   isPayingWithPaymob: boolean;
   paymobResponseData: any;
   setPaymobResponseData: (d: any) => void;
+  paymobError: string | null;
   handlePayWithPaymob: () => Promise<void>;
   handleOpenOrder: (account: PesAccount) => void;
   handleCloseOrder: () => void;
 }
 
 export function useStore(): UseStoreReturn {
-  const { t } = useLanguage();
-
   const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
   const [selectedAccountForView, setSelectedAccountForView] = useState<PesAccount | null>(null);
   const [purchaseSuccessAccount, setPurchaseSuccessAccount] = useState<PesAccount | null>(null);
   const [isPayingWithPaymob, setIsPayingWithPaymob] = useState(false);
   const [paymobResponseData, setPaymobResponseData] = useState<any>(null);
+  const [paymobError, setPaymobError] = useState<string | null>(null);
 
   const handleOpenBuyFlow = useCallback(() => {
     setIsDeviceModalOpen(true);
@@ -49,15 +48,18 @@ export function useStore(): UseStoreReturn {
   const handleOpenOrder = useCallback((account: PesAccount) => {
     setPurchaseSuccessAccount(account);
     setPaymobResponseData(null);
+    setPaymobError(null);
   }, []);
 
   const handleCloseOrder = useCallback(() => {
     setPurchaseSuccessAccount(null);
     setPaymobResponseData(null);
+    setPaymobError(null);
   }, []);
 
   const handlePayWithPaymob = useCallback(async () => {
     if (!purchaseSuccessAccount) return;
+    setPaymobError(null);
     try {
       setIsPayingWithPaymob(true);
       const res = await paymobApi.initiate({
@@ -68,15 +70,34 @@ export function useStore(): UseStoreReturn {
       if (res.data) {
         setPaymobResponseData(res.data);
         if (res.data.checkoutUrl) {
-          window.open(res.data.checkoutUrl, '_blank');
+          // Save pending purchase in localStorage to guarantee delivery even across tab switches
+          try {
+            localStorage.setItem(
+              'pes_pending_purchase',
+              JSON.stringify({
+                accountId: purchaseSuccessAccount.id,
+                accountTitle: purchaseSuccessAccount.title,
+                price: purchaseSuccessAccount.price,
+                timestamp: Date.now(),
+              })
+            );
+          } catch {
+            // ignore storage errors
+          }
+          window.location.href = res.data.checkoutUrl;
         }
       }
     } catch (err: any) {
-      alert(t('paymobError') + err.message);
+      // استخراج رسالة الخطأ من السيرفر (مثل: نفد المخزون)
+      const serverMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'حدث خطأ غير متوقع، يرجى المحاولة مجدداً';
+      setPaymobError(serverMsg);
     } finally {
       setIsPayingWithPaymob(false);
     }
-  }, [purchaseSuccessAccount, t]);
+  }, [purchaseSuccessAccount]);
 
   return {
     isDeviceModalOpen,
@@ -90,6 +111,7 @@ export function useStore(): UseStoreReturn {
     isPayingWithPaymob,
     paymobResponseData,
     setPaymobResponseData,
+    paymobError,
     handlePayWithPaymob,
     handleOpenOrder,
     handleCloseOrder,
