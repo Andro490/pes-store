@@ -3,7 +3,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import type { PesAccount, DeliveredAccount } from '../../types';
 
 // TODO: move to env / config
-const WHATSAPP_NUMBER = '201000000000';
+const WHATSAPP_NUMBER = '201144231586';
 
 interface PurchaseModalProps {
   account: PesAccount;
@@ -30,6 +30,41 @@ export function PurchaseModal({
   const [deliveredData] = useState<DeliveredAccount | null>(initialDeliveredData || null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showAltPayments, setShowAltPayments] = useState(false);
+
+  const ALT_PAYMENT_METHODS = [
+    {
+      id: 'binance',
+      label: 'Binance Pay',
+      icon: '🟡',
+      desc: 'دفع بالـ USDT عبر Binance Pay',
+      detail: 'Binance Pay (USDT)',
+    },
+    {
+      id: 'asia-transfer',
+      label: 'Asia عراقي — تحويل بنكي',
+      icon: '🏦',
+      desc: 'تحويل بنكي عراقي مباشر',
+      detail: 'Asia عراقي (تحويل بنكي)',
+    },
+    {
+      id: 'asia-card',
+      label: 'Asia عراقي — كروت',
+      icon: '💳',
+      desc: 'دفع بالكارت عبر Asia عراق',
+      detail: 'Asia عراقي (كارت)',
+    },
+    {
+      id: 'bybit',
+      label: 'Bybit Pay',
+      icon: '🔵',
+      desc: 'دفع بالـ USDT عبر Bybit',
+      detail: 'Bybit Pay (USDT)',
+    },
+  ];
+
+  const buildAltWhatsAppMsg = (methodDetail: string) =>
+    `مرحباً 👋%0Aأريد شراء الحساب التالي عبر *${methodDetail}*:%0A%0A🎮 *${account.title}*%0A💰 السعر: ${formatPrice(account.price)}%0A📱 المنصة: ${account.platform}%0A🆔 ID: ${account.id}%0A%0Aأرجو التأكيد وإرسال بيانات الدفع. شكراً!`;
 
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
@@ -453,31 +488,93 @@ export function PurchaseModal({
 
             {/* Paymob response link if available — hidden, redirect is automatic */}
 
-            {/* WhatsApp button */}
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappText)}`}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                width: '100%',
-                padding: '12px',
-                borderRadius: '14px',
-                background: 'rgba(16, 185, 129, 0.12)',
-                color: '#34d399',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
-                fontWeight: '800',
-                fontSize: '13px',
-                textDecoration: 'none',
-                marginBottom: '12px',
-              }}
-            >
-              <span>💬</span>
-              <span>تواصل مع الدعم عبر واتساب</span>
-            </a>
+            {/* ─── وسائل الدفع البديلة ─── */}
+            {!showAltPayments ? (
+              <button
+                onClick={() => setShowAltPayments(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  width: '100%',
+                  padding: '13px',
+                  borderRadius: '14px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  color: '#34d399',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  fontWeight: '800',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  marginBottom: '12px',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <span>💳</span>
+                <span>وسائل دفع أخرى (Binance / Asia / Bybit)</span>
+                <span style={{ marginRight: 'auto', fontSize: '16px' }}>▾</span>
+              </button>
+            ) : (
+              <div
+                style={{
+                  marginBottom: '12px',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  overflow: 'hidden',
+                  background: 'rgba(255,255,255,0.03)',
+                }}
+              >
+                {/* Header */}
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    borderBottom: '1px solid rgba(239, 68, 68, 0.15)',
+                    fontSize: '12px',
+                    color: '#f87171',
+                    fontWeight: 800,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setShowAltPayments(false)}
+                >
+                  <span>💳 اختر طريقة الدفع — سيتم فتح واتساب تلقائياً</span>
+                  <span style={{ fontSize: '16px' }}>▴</span>
+                </div>
+
+                {/* Payment options */}
+                {ALT_PAYMENT_METHODS.map((method) => (
+                  <a
+                    key={method.id}
+                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${buildAltWhatsAppMsg(method.detail)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      textDecoration: 'none',
+                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      transition: 'background 0.2s',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <span style={{ fontSize: '22px' }}>{method.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '13px', fontWeight: 800, color: '#f1f5f9' }}>{method.label}</div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{method.desc}</div>
+                    </div>
+                    <span style={{ fontSize: '18px', color: '#25d366' }}>↗ واتساب</span>
+                  </a>
+                ))}
+              </div>
+            )}
 
             <button onClick={onClose} className="btn-all-devices-link">
               {t('backToStoreBtn')}
