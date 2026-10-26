@@ -9,35 +9,42 @@ const users: { id: string; name: string; email: string; password: string; role: 
 // ─── Register ─────────────────────────────────────────────────────────────────
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, role = 'student' } = req.body;
+    const { name, email, password } = req.body;
+    const role = 'student';
 
-    // Validation
     if (!name || !email || !password) {
       res.status(400).json({ success: false, message: 'Name, email and password are required' });
       return;
     }
 
-    // Check if user exists
-    const existingUser = users.find(u => u.email === email);
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      res.status(400).json({ success: false, message: 'A valid email address is required' });
+      return;
+    }
+
+    const existingUser = users.find(u => u.email === normalizedEmail);
     if (existingUser) {
       res.status(409).json({ success: false, message: 'Email already registered' });
       return;
     }
 
-    // Hash password
+    if (typeof password !== 'string' || password.length < 8) {
+      res.status(400).json({ success: false, message: 'Password must be at least 8 characters long' });
+      return;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
     const newUser = {
       id: Date.now().toString(),
-      name,
-      email,
+      name: String(name).trim(),
+      email: normalizedEmail,
       password: hashedPassword,
       role,
     };
     users.push(newUser);
 
-    // Generate token
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, role: newUser.role },
       process.env.JWT_SECRET as string,

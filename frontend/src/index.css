@@ -1214,8 +1214,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 24px 16px;
   animation: fadeIn 0.25s ease;
+  overflow-y: auto;
 }
 
 @keyframes fadeIn {
@@ -1227,6 +1228,10 @@ body {
   position: relative;
   width: 100%;
   max-width: 520px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: auto;
   background: #0e1014;
   border: 1px solid rgba(220, 38, 38, 0.28);
   border-radius: 28px;
@@ -1234,6 +1239,26 @@ body {
   text-align: center;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(220, 38, 38, 0.14);
   animation: modalScale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(239, 68, 68, 0.4) rgba(255, 255, 255, 0.03);
+}
+
+.device-modal-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.device-modal-card::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.device-modal-card::-webkit-scrollbar-thumb {
+  background: rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+}
+
+.device-modal-card::-webkit-scrollbar-thumb:hover {
+  background: rgba(239, 68, 68, 0.6);
 }
 
 @keyframes modalScale {

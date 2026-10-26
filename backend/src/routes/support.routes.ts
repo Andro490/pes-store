@@ -5,18 +5,23 @@ import { authenticate, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Helper: Generate signed chat session token for a phone number
-function generateChatToken(phone: string): string {
-  const secret = process.env.JWT_SECRET || 'pes_store_secure_chat_secret';
-  return jwt.sign({ phone, role: 'chat_user' }, secret, { expiresIn: '60d' });
+function normalizePhone(phone: string): string {
+  return String(phone).trim().replace(/[^\d+]/g, '').slice(0, 30);
 }
 
-// Helper: Verify chat access permissions (either Admin OR the verified phone owner)
+function generateChatToken(phone: string): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+  return jwt.sign({ phone: normalizePhone(phone), role: 'chat_user' }, secret, { expiresIn: '60d' });
+}
+
 function verifyChatAccess(req: Request, targetPhone: string): boolean {
-  const cleanTarget = targetPhone.trim();
+  const cleanTarget = normalizePhone(targetPhone);
   const token = (req.headers['x-chat-token'] as string) ||
-                (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : undefined) ||
-                (req as any).cookies?.admin_token;
+    (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : undefined) ||
+    (req as any).cookies?.admin_token;
 
   if (!token) return false;
 
@@ -25,7 +30,7 @@ function verifyChatAccess(req: Request, targetPhone: string): boolean {
     if (!secret) return false;
     const decoded = jwt.verify(token, secret) as any;
     if (decoded.role === 'admin') return true;
-    if (decoded.phone && String(decoded.phone).trim() === cleanTarget) return true;
+    if (decoded.phone && normalizePhone(decoded.phone) === cleanTarget) return true;
   } catch {
     return false;
   }
@@ -36,11 +41,12 @@ function verifyChatAccess(req: Request, targetPhone: string): boolean {
 // 0. POST /api/support/session (Issue secure token for customer's phone number)
 router.post('/session', (req: Request, res: Response) => {
   const { phone } = req.body;
-  if (!phone || typeof phone !== 'string' || phone.trim().length < 5) {
+  const cleanPhone = normalizePhone(phone);
+  if (!cleanPhone || cleanPhone.length < 5 || !/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
     res.status(400).json({ success: false, message: 'رقم هاتف غير صالح' });
     return;
   }
-  const cleanPhone = phone.trim();
+
   res.json({ success: true, chatToken: generateChatToken(cleanPhone) });
 });
 
@@ -48,8 +54,9 @@ router.post('/session', (req: Request, res: Response) => {
 router.post('/message', async (req: Request, res: Response) => {
   try {
     const { phone, message } = req.body;
+    const cleanPhone = normalizePhone(phone);
 
-    if (!phone || !String(phone).trim() || String(phone).trim().length < 5) {
+    if (!cleanPhone || cleanPhone.length < 5 || !/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
       res.status(400).json({ success: false, message: 'رقم الموبايل مطلوب وصحيح قبل إرسال الرسالة' });
       return;
     }
@@ -59,8 +66,6 @@ router.post('/message', async (req: Request, res: Response) => {
       return;
     }
 
-    const cleanPhone = String(phone).trim().slice(0, 30);
-    // Sanitize message: strip HTML tags and restrict length to 1000 chars to avoid XSS / payload abuse
     const cleanMessage = String(message).trim().replace(/<[^>]*>?/gm, '').slice(0, 1000);
 
     const created = await (prisma as any).supportMessage.create({
@@ -111,9 +116,13 @@ router.get('/messages/:phone', async (req: Request, res: Response) => {
       return;
     }
 
-    const cleanPhone = String(phone).trim();
+    const cleanPhone = normalizePhone(phone);
 
-    // Verification check: Only the owner of this phone or an authenticated Admin can view messages
+    if (!cleanPhone || !/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
+      res.status(400).json({ success: false, message: 'رقم الموبايل مطلوب' });
+      return;
+    }
+
     if (!verifyChatAccess(req, cleanPhone)) {
       res.status(403).json({
         success: false,

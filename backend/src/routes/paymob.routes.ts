@@ -73,7 +73,12 @@ router.post('/verify-and-deliver', async (req: Request, res: Response) => {
       return;
     }
 
-    // 1. التحقق من العملية مباشرة مع خوادم Paymob
+    const account = await prisma.pesAccount.findUnique({ where: { id: accountId } });
+    if (!account) {
+      res.status(404).json({ success: false, message: 'الحساب المطلوب غير موجود' });
+      return;
+    }
+
     const verifyResult = await PaymobService.verifyTransaction(transactionId);
 
     if (!verifyResult.isSuccess) {
@@ -84,9 +89,17 @@ router.post('/verify-and-deliver', async (req: Request, res: Response) => {
       return;
     }
 
-    // 2. سحب الحساب من المخزون وتسليمه فورياً للمشتري (مع منع التكرار باستخدام transactionId)
-    const phone =
-      buyerPhone ||
+    const expectedAmount = Number(account.price);
+    const actualAmount = Number(verifyResult.amountEgp);
+    if (!Number.isFinite(actualAmount) || actualAmount <= 0 || Math.abs(actualAmount - expectedAmount) > 0.01) {
+      res.status(400).json({
+        success: false,
+        message: `مبلغ الدفع غير مطابق لسعر الحساب. السعر المتوقع: ${expectedAmount} EGP`
+      });
+      return;
+    }
+
+    const phone = buyerPhone ||
       verifyResult.transaction?.order?.shipping_data?.phone_number ||
       verifyResult.transaction?.billing_data?.phone_number ||
       undefined;

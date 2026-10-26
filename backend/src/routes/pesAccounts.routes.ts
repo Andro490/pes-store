@@ -368,7 +368,20 @@ router.delete('/:id', authenticate, authorizeRoles('admin'), async (req: Request
 router.post('/:id/buy', async (req: Request, res: Response) => {
   try {
     const { buyerPhone } = req.body;
-    const result = await StockService.purchaseAndDeliverOne(req.params.id, buyerPhone);
+    const account = await prisma.pesAccount.findUnique({ where: { id: req.params.id } });
+
+    if (!account) {
+      res.status(404).json({ success: false, message: 'الحساب غير موجود' });
+      return;
+    }
+
+    const cleanPhone = typeof buyerPhone === 'string' ? buyerPhone.trim() : '';
+    if (!cleanPhone || !/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
+      res.status(400).json({ success: false, message: 'يرجى تقديم رقم هاتف صحيح لإتمام الشراء' });
+      return;
+    }
+
+    const result = await StockService.purchaseAndDeliverOne(req.params.id, cleanPhone);
 
     res.json({
       success: true,
