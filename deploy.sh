@@ -26,5 +26,11 @@ cd ..
 # 4. إعادة تشغيل السيرفر عبر PM2
 echo "🔄 إعادة تشغيل خدمة الـ Backend عبر PM2..."
 pm2 restart pes-store-backend || pm2 start ecosystem.config.js
+pm2 save
+
+# 5. تحديث إعدادات Nginx
+echo "🌐 تحديث وضبط Nginx..."
+cp -f nginx.conf /etc/nginx/conf.d/pes-store.conf 2>/dev/null || true
+nginx -t && systemctl reload nginx 2>/dev/null || true
 
 echo "✅ تم نشر وتحديث المتجر بنجاح 🚀"
