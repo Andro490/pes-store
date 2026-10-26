@@ -72,14 +72,6 @@ export function PurchaseModal({
     setTimeout(() => setCopiedField(null), 2500);
   };
 
-  const whatsappText = t('whatsappMessage', {
-    title: account.title,
-    id: account.id,
-    price: formatPrice(account.price),
-    currency: '',
-    platform: account.platform,
-  });
-
   return (
     <div className="modal-backdrop-overlay">
       <div className="device-modal-card" style={{ maxWidth: '520px', textAlign: isRTL ? 'right' : 'left' }}>
