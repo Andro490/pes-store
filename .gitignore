@@ -8,7 +8,9 @@ dist/
 
 # Environment Variables (مهم جداً لعدم تسريب مفاتيح Paymob)
 .env
+.env*
 */.env
+*/.env*
 !.env.example
 !*/.env.example
 
