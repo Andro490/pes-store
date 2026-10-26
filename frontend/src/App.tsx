@@ -173,6 +173,7 @@ export default function App() {
           type: 'error',
           message: 'تعذر التحقق من بيانات الطلب في هذا المتصفح. أعد فتح صفحة الدفع الأصلية أو تواصل مع الدعم.',
         });
+        window.history.replaceState({}, document.title, window.location.pathname);
       } else if (params.get('success') === 'false') {
         setPaymentBanner({
           type: 'error',
