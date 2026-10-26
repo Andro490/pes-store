@@ -183,8 +183,15 @@ export class PaymobService {
       );
 
       const clientSecret = res.client_secret;
-      const orderId = res.intention_order?.id;
+      const orderId =
+        res.intention_order_id ??
+        res.intention_order?.id ??
+        res.payment_keys?.[0]?.order_id ??
+        res.order_id ??
+        res.id;
+
       if (!clientSecret || orderId === undefined || orderId === null) {
+        console.error('Paymob response missing orderId or clientSecret:', JSON.stringify(res));
         throw new Error('استجابة Paymob لا تحتوي على بيانات طلب دفع صالحة');
       }
       const checkoutUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${publicKey}&clientSecret=${clientSecret}`;

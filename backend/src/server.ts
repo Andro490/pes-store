@@ -18,6 +18,9 @@ import supportRoutes from './routes/support.routes';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust Nginx reverse proxy (1 hop)
+app.set('trust proxy', 1);
+
 // ─── Security Headers (Helmet) ───────────────────────────────────────────────
 app.use(
   helmet({

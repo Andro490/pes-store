@@ -35,7 +35,8 @@ const request = async <T>(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
-    const err: any = new Error(errorData.message || 'Request failed');
+    const errorMsg = errorData.error ? `${errorData.message} (${errorData.error})` : (errorData.message || 'Request failed');
+    const err: any = new Error(errorMsg);
     err.status = response.status;
     err.isLocked = errorData.isLocked;
     err.lockUntil = errorData.lockUntil;
