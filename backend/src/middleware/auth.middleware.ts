@@ -7,6 +7,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthPayload;
+      authSource?: 'cookie' | 'bearer';
     }
   }
 }
@@ -17,10 +18,12 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
 
   let token: string | undefined;
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.split(' ')[1];
-  } else if (cookieToken) {
+  if (cookieToken) {
     token = cookieToken;
+    req.authSource = 'cookie';
+  } else if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+    req.authSource = 'bearer';
   }
 
   if (!token) {
@@ -47,6 +50,10 @@ export const authorizeRoles = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role)) {
       res.status(403).json({ success: false, message: 'Access denied. Insufficient permissions.' });
+      return;
+    }
+    if (roles.includes('admin') && (req.authSource !== 'cookie' || req.user.adminSession !== true)) {
+      res.status(403).json({ success: false, message: 'Admin access requires a valid secure session.' });
       return;
     }
     next();

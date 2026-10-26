@@ -88,23 +88,18 @@ export function useAdminAuth(onLogout?: () => void): UseAdminAuthReturn {
   }, [startCountdown]);
 
   const checkAdminAuth = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setIsAdminLoggedIn(false);
-      return;
-    }
     try {
       const res = await authApi.adminVerify();
       if (res && res.success) {
         setIsAdminLoggedIn(true);
         setAdminUser(res.data);
       } else {
-        localStorage.removeItem('token');
         setIsAdminLoggedIn(false);
+        setAdminUser(null);
       }
     } catch {
-      localStorage.removeItem('token');
       setIsAdminLoggedIn(false);
+      setAdminUser(null);
     }
   }, []);
 
@@ -119,8 +114,7 @@ export function useAdminAuth(onLogout?: () => void): UseAdminAuthReturn {
           username: adminUsername,
           password: adminPassword,
         });
-        if (res.success && res.data.token) {
-          localStorage.setItem('token', res.data.token);
+        if (res.success) {
           setIsAdminLoggedIn(true);
           setAdminUser(res.data.user);
           setAdminPassword('');
@@ -151,10 +145,13 @@ export function useAdminAuth(onLogout?: () => void): UseAdminAuthReturn {
   );
 
   const handleAdminLogout = useCallback(() => {
-    localStorage.removeItem('token');
     setIsAdminLoggedIn(false);
     setAdminUser(null);
     onLogout?.();
+    void authApi.adminLogout().catch((error) => {
+      console.error('Admin logout request failed:', error);
+      setAdminAuthError('تعذر إنهاء جلسة الإدارة على الخادم. يرجى المحاولة مجدداً.');
+    });
   }, [onLogout]);
 
   return {

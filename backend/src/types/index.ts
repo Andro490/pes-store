@@ -12,6 +12,7 @@ export interface AuthPayload {
   id: string;
   email: string;
   role: string;
+  adminSession?: boolean;
 }
 
 export interface ApiResponse<T = unknown> {

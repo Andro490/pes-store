@@ -305,7 +305,7 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
 
     // Generate Admin JWT token
     const token = jwt.sign(
-      { id: 'admin-root', email: `${adminUser}@pes.store`, role: 'admin' },
+      { id: 'admin-root', email: `${adminUser}@pes.store`, role: 'admin', adminSession: true },
       jwtSecret,
       { expiresIn: (process.env.JWT_EXPIRES_IN as any) || '7d' }
     );
@@ -322,7 +322,6 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
       success: true,
       message: 'تم تسجيل دخول لوحة التحكم بنجاح 👑',
       data: {
-        token,
         user: { id: 'admin-root', name: adminUser, role: 'admin' },
       },
     });

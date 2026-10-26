@@ -56,9 +56,14 @@ export const authApi = {
     request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
 
   adminLogin: (data: { username: string; password: string }) =>
-    request<{ success: boolean; message: string; data: { token: string; user: { id: string; name: string; role: string } } }>('/auth/admin-login', {
+    request<{ success: boolean; message: string; data: { user: { id: string; name: string; role: string } } }>('/auth/admin-login', {
       method: 'POST',
       body: JSON.stringify(data),
+    }),
+
+  adminLogout: () =>
+    request<{ success: boolean; message: string }>('/auth/admin-logout', {
+      method: 'POST',
     }),
 
   adminVerify: () =>
@@ -201,4 +206,3 @@ export const supportApi = {
       method: 'DELETE',
     }),
 };
-
