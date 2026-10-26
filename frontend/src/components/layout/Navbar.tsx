@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 
@@ -19,14 +20,32 @@ export function Navbar({
   onCreateAccount,
 }: NavbarProps) {
   const { t } = useLanguage();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <header className="site-header">
+    <header className={`site-header ${scrolled ? 'scrolled' : ''}`}>
+      {/* Top neon line */}
+      <div className="navbar-top-line" />
+
       <div className="header-container">
         {/* Logo */}
         <div className="logo-area" style={{ cursor: 'pointer' }} onClick={() => onNavigate('store')}>
           <div className="logo-icon-box">
-            <div className="logo-icon-inner">⚽</div>
+            <div className="logo-icon-inner">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="#ffd700" strokeWidth="1.5"/>
+                <path d="M12 2C12 2 8 8 8 12s4 10 4 10" stroke="#ffd700" strokeWidth="1.5"/>
+                <path d="M12 2C12 2 16 8 16 12s-4 10-4 10" stroke="#ffd700" strokeWidth="1.5"/>
+                <path d="M2 12h20" stroke="#ffd700" strokeWidth="1.5"/>
+                <path d="M4.93 7h14.14M4.93 17h14.14" stroke="#ffd700" strokeWidth="1" opacity="0.6"/>
+              </svg>
+            </div>
           </div>
           <div>
             <div className="logo-text-title">
@@ -41,63 +60,25 @@ export function Navbar({
         <nav className="header-nav">
           <button
             onClick={() => onNavigate('store')}
-            style={{
-              background: currentView === 'store' ? 'rgba(6, 182, 212, 0.15)' : 'transparent',
-              color: currentView === 'store' ? '#38bdf8' : 'var(--text-muted)',
-              border: currentView === 'store' ? '1px solid rgba(6, 182, 212, 0.3)' : 'none',
-              padding: '8px 16px',
-              borderRadius: '12px',
-              fontWeight: 700,
-              fontSize: '14px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`nav-pill-btn ${currentView === 'store' ? 'nav-pill-active-cyan' : ''}`}
           >
             <span>🛒</span>
             <span>{t('navStore')}</span>
+            {currentView === 'store' && <span className="nav-active-dot" />}
           </button>
 
           {isAdminLoggedIn && (
             <>
               <button
                 onClick={() => onNavigate('admin')}
-                style={{
-                  background: currentView === 'admin' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                  color: currentView === 'admin' ? '#a5b4fc' : 'var(--text-muted)',
-                  border: currentView === 'admin' ? '1px solid rgba(99, 102, 241, 0.4)' : 'none',
-                  padding: '8px 16px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
+                className={`nav-pill-btn ${currentView === 'admin' ? 'nav-pill-active-indigo' : ''}`}
               >
                 <span>⚙️</span>
                 <span>{t('navAdmin')}</span>
+                {currentView === 'admin' && <span className="nav-active-dot" style={{ background: '#818cf8' }} />}
               </button>
 
-              <button
-                onClick={onLogout}
-                title={t('navLogout')}
-                style={{
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  color: '#f87171',
-                  border: '1px solid rgba(239, 68, 68, 0.25)',
-                  padding: '8px 14px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
+              <button onClick={onLogout} className="nav-pill-btn nav-pill-danger">
                 <span>🚪</span>
                 <span>{t('navLogout')}</span>
               </button>
@@ -110,7 +91,7 @@ export function Navbar({
           <LanguageSwitcher />
           {currentView === 'store' ? (
             <button onClick={onBuyClick} className="btn-header-buy">
-              <span>⚡</span>
+              <span className="btn-buy-spark">⚡</span>
               <span>{t('navBuyAccount')}</span>
             </button>
           ) : isAdminLoggedIn ? (

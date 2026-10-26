@@ -9,10 +9,10 @@ export function SupportChatWidget() {
   const [messageText, setMessageText] = useState('');
   const [messages, setMessages] = useState<SupportMessageItem[]>([]);
   const [isSending, setIsSending] = useState(false);
-  const [hasNewAdminReply, setHasNewAdminReply] = useState(false);
+  const [unreadAdminCount, setUnreadAdminCount] = useState<number>(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Poll messages every 4s if open and phone is set
+  // Poll messages every 4s if phone is set
   useEffect(() => {
     if (!phone) return;
 
@@ -21,14 +21,20 @@ export function SupportChatWidget() {
       try {
         const res = await supportApi.getMessages(phone);
         if (res.success && isMounted) {
-          setMessages((prev) => {
-            // Check if new admin reply arrived while widget was closed
-            if (!isOpen && res.data.length > prev.length) {
-              const last = res.data[res.data.length - 1];
-              if (last.sender === 'admin') setHasNewAdminReply(true);
-            }
-            return res.data;
-          });
+          setMessages(res.data);
+
+          // Calculate unread admin messages
+          if (!isOpen) {
+            const lastSeen = localStorage.getItem('pes_support_last_seen') || '1970-01-01T00:00:00Z';
+            const unread = res.data.filter(
+              (m) => m.sender === 'admin' && m.createdAt > lastSeen
+            ).length;
+            setUnreadAdminCount(unread);
+          } else {
+            // When open, mark all as seen
+            localStorage.setItem('pes_support_last_seen', new Date().toISOString());
+            setUnreadAdminCount(0);
+          }
         }
       } catch {
         // Silent fail on background poll
@@ -36,12 +42,21 @@ export function SupportChatWidget() {
     };
 
     fetchChat();
-    const interval = setInterval(fetchChat, 4000);
+    const interval = setInterval(fetchChat, 3000);
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
   }, [phone, isOpen]);
+
+  // When opening widget, clear unread count
+  useEffect(() => {
+    if (isOpen) {
+      localStorage.setItem('pes_support_last_seen', new Date().toISOString());
+      setUnreadAdminCount(0);
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isOpen]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -98,42 +113,52 @@ export function SupportChatWidget() {
     <>
       {/* Floating Trigger Button */}
       <button
-        onClick={() => {
-          setIsOpen(!isOpen);
-          setHasNewAdminReply(false);
-        }}
+        onClick={() => setIsOpen(!isOpen)}
         style={{
           position: 'fixed',
           bottom: '24px',
           left: '24px',
           zIndex: 9999,
-          background: 'linear-gradient(135deg, #ec4899, #be185d)',
-          color: '#fff',
-          border: 'none',
+          background: 'linear-gradient(135deg, #ffe600, #f59e0b)',
+          color: '#08090c',
+          border: '1px solid rgba(255, 235, 150, 0.6)',
           borderRadius: '50px',
           padding: '12px 20px',
           fontSize: '14px',
-          fontWeight: 800,
+          fontWeight: 900,
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          boxShadow: '0 8px 24px rgba(236, 72, 153, 0.45)',
+          boxShadow: '0 8px 24px rgba(245, 158, 11, 0.45)',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
         <span style={{ fontSize: '18px' }}>💬</span>
         <span>الدعم الفني</span>
-        {hasNewAdminReply && (
+        {unreadAdminCount > 0 && (
           <span
             style={{
-              width: '10px',
-              height: '10px',
+              position: 'absolute',
+              top: '-8px',
+              right: '-6px',
+              background: '#ef4444',
+              color: '#fff',
               borderRadius: '50%',
-              background: '#34d399',
-              boxShadow: '0 0 10px #34d399',
+              minWidth: '22px',
+              height: '22px',
+              padding: '0 6px',
+              fontSize: '12px',
+              fontWeight: 900,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.7)',
+              border: '2px solid #fff',
             }}
-          />
+          >
+            {unreadAdminCount}
+          </span>
         )}
       </button>
 
@@ -149,10 +174,10 @@ export function SupportChatWidget() {
             maxWidth: 'calc(100vw - 32px)',
             height: '520px',
             maxHeight: 'calc(100vh - 120px)',
-            background: 'linear-gradient(180deg, #120e24 0%, #080612 100%)',
-            border: '1px solid rgba(236, 72, 153, 0.3)',
+            background: 'linear-gradient(180deg, #10121a 0%, #08090d 100%)',
+            border: '1px solid rgba(212, 175, 55, 0.3)',
             borderRadius: '24px',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(236, 72, 153, 0.2)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.15)',
             zIndex: 10000,
             display: 'flex',
             flexDirection: 'column',
@@ -163,15 +188,15 @@ export function SupportChatWidget() {
           <div
             style={{
               padding: '16px 20px',
-              background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(190, 24, 93, 0.1))',
-              borderBottom: '1px solid rgba(236, 72, 153, 0.25)',
+              background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(255, 230, 0, 0.08))',
+              borderBottom: '1px solid rgba(212, 175, 55, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px', color: '#f43f5e' }}>💬</span>
+              <span style={{ fontSize: '18px', color: '#ffd700' }}>💬</span>
               <span style={{ fontWeight: 800, fontSize: '16px', color: '#fff' }}>الدعم الفني</span>
             </div>
             <button
@@ -194,11 +219,11 @@ export function SupportChatWidget() {
             <div
               style={{
                 padding: '14px 16px',
-                background: 'rgba(236, 72, 153, 0.1)',
-                borderBottom: '1px solid rgba(236, 72, 153, 0.2)',
+                background: 'rgba(212, 175, 55, 0.08)',
+                borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
               }}
             >
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#f472b6', marginBottom: '8px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffd700', marginBottom: '8px' }}>
                 📱 رقم الموبايل مطلوب أولاً للتواصل والرد عليك:
               </div>
               <form onSubmit={handleSavePhone} style={{ display: 'flex', gap: '8px' }}>
@@ -210,8 +235,8 @@ export function SupportChatWidget() {
                   onChange={(e) => setPhoneInput(e.target.value)}
                   style={{
                     flex: 1,
-                    background: '#090714',
-                    border: '1px solid rgba(236, 72, 153, 0.4)',
+                    background: '#090a0f',
+                    border: '1px solid rgba(212, 175, 55, 0.35)',
                     color: '#fff',
                     borderRadius: '10px',
                     padding: '8px 12px',
@@ -223,13 +248,13 @@ export function SupportChatWidget() {
                 <button
                   type="submit"
                   style={{
-                    background: 'linear-gradient(135deg, #ec4899, #be185d)',
-                    color: '#fff',
+                    background: 'linear-gradient(135deg, #ffe600, #f59e0b)',
+                    color: '#08090c',
                     border: 'none',
                     borderRadius: '10px',
                     padding: '8px 14px',
                     fontSize: '12px',
-                    fontWeight: 800,
+                    fontWeight: 900,
                     cursor: 'pointer',
                   }}
                 >
@@ -250,7 +275,7 @@ export function SupportChatWidget() {
               }}
             >
               <span style={{ color: '#94a3b8' }}>
-                رقمك: <strong style={{ color: '#f472b6', direction: 'ltr', display: 'inline-block' }}>{phone}</strong>
+                رقمك: <strong style={{ color: '#ffd700', direction: 'ltr', display: 'inline-block' }}>{phone}</strong>
               </span>
               <button
                 type="button"
@@ -258,7 +283,7 @@ export function SupportChatWidget() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#38bdf8',
+                  color: '#ffe600',
                   fontSize: '11px',
                   cursor: 'pointer',
                   textDecoration: 'underline',
@@ -307,15 +332,16 @@ export function SupportChatWidget() {
                   <div
                     style={{
                       background: isAdmin
-                        ? 'linear-gradient(135deg, #ec4899, #be185d)'
+                        ? 'linear-gradient(135deg, #ffe600, #f59e0b)'
                         : 'rgba(255, 255, 255, 0.08)',
-                      color: '#fff',
+                      color: isAdmin ? '#08090c' : '#fff',
                       padding: '10px 14px',
                       borderRadius: isAdmin ? '16px 16px 16px 4px' : '16px 16px 4px 16px',
                       fontSize: '13px',
+                      fontWeight: isAdmin ? 600 : 400,
                       lineHeight: '1.5',
-                      boxShadow: isAdmin ? '0 4px 14px rgba(236, 72, 153, 0.35)' : 'none',
-                      border: isAdmin ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
+                      boxShadow: isAdmin ? '0 4px 14px rgba(245, 158, 11, 0.35)' : 'none',
+                      border: isAdmin ? 'none' : '1px solid rgba(212, 175, 55, 0.2)',
                       wordBreak: 'break-word',
                     }}
                   >
@@ -342,8 +368,8 @@ export function SupportChatWidget() {
             onSubmit={handleSendMessage}
             style={{
               padding: '12px 14px',
-              borderTop: '1px solid rgba(236, 72, 153, 0.2)',
-              background: '#090714',
+              borderTop: '1px solid rgba(212, 175, 55, 0.2)',
+              background: '#090a0f',
               display: 'flex',
               gap: '8px',
               alignItems: 'center',
@@ -358,7 +384,7 @@ export function SupportChatWidget() {
               style={{
                 flex: 1,
                 background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(212, 175, 55, 0.2)',
                 color: '#fff',
                 borderRadius: '12px',
                 padding: '10px 14px',
@@ -371,9 +397,9 @@ export function SupportChatWidget() {
               disabled={!phone || !messageText.trim() || isSending}
               style={{
                 background: (!phone || !messageText.trim() || isSending)
-                  ? 'rgba(236, 72, 153, 0.3)'
-                  : 'linear-gradient(135deg, #ec4899, #be185d)',
-                color: '#fff',
+                  ? 'rgba(212, 175, 55, 0.25)'
+                  : 'linear-gradient(135deg, #ffe600, #f59e0b)',
+                color: '#08090c',
                 border: 'none',
                 borderRadius: '12px',
                 width: '42px',
@@ -383,7 +409,7 @@ export function SupportChatWidget() {
                 justifyContent: 'center',
                 cursor: (!phone || !messageText.trim() || isSending) ? 'not-allowed' : 'pointer',
                 fontSize: '16px',
-                boxShadow: '0 4px 12px rgba(236, 72, 153, 0.3)',
+                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
                 flexShrink: 0,
               }}
             >

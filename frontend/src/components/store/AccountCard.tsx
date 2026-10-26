@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { PesAccount } from '../../types';
 
@@ -10,33 +11,28 @@ interface AccountCardProps {
 export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
   const { t, formatPrice, formatPriceParts } = useLanguage();
   const { amount, unit, prefix } = formatPriceParts(account.price);
+  const [hovered, setHovered] = useState(false);
 
   return (
-    <div className="account-square-card" style={{ opacity: account.isAvailable ? 1 : 0.85 }}>
+    <div
+      className={`account-square-card ${hovered ? 'card-hovered' : ''}`}
+      style={{ opacity: account.isAvailable ? 1 : 0.8 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Neon border glow on hover */}
+      <div className="card-glow-border" />
+
       {/* Image */}
       <div className="card-image-box">
         <img src={account.imageUrl} alt={account.title} className="card-thumb-img" loading="lazy" />
         <div className="card-img-overlay" />
 
-        {/* Sold / Badge banner */}
+        {/* Sold Banner */}
         {!account.isAvailable ? (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              background: 'rgba(239, 68, 68, 0.9)',
-              color: '#fff',
-              textAlign: 'center',
-              padding: '6px',
-              fontWeight: 900,
-              fontSize: '13px',
-              zIndex: 10,
-              boxShadow: '0 4px 14px rgba(239, 68, 68, 0.5)',
-            }}
-          >
-            {t('soldBadge')}
+          <div className="card-sold-banner">
+            <span className="sold-icon">🔒</span>
+            <span>{t('soldBadge')}</span>
           </div>
         ) : (
           account.badge && (
@@ -46,15 +42,16 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
           )
         )}
 
-        {/* Platform badge */}
-        <div className="card-badge-top-left" style={{ top: account.isAvailable ? '12px' : '38px' }}>
+        {/* Platform Badge */}
+        <div className="card-badge-top-left" style={{ top: account.isAvailable ? '12px' : '44px' }}>
           <span className={`platform-badge ${account.platform}`}>
             <span>{account.platform === 'android' ? '🤖' : '🍏'}</span>
             <span>{account.platform === 'android' ? 'Android' : 'iOS'}</span>
           </span>
         </div>
 
-
+        {/* Hovering scan line */}
+        {hovered && <div className="card-scan-line" />}
       </div>
 
       {/* Content */}
@@ -95,7 +92,7 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
 
           <h3 className="card-account-title">{account.title}</h3>
 
-          {/* Specs */}
+          {/* Epic Count */}
           <div className="card-specs-row" style={{ gridTemplateColumns: '1fr' }}>
             <div className="spec-mini-badge" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 12px' }}>
               <span className="spec-name">{t('epicLegends')}</span>
@@ -136,24 +133,12 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
 
           {account.isAvailable ? (
             <button onClick={() => onOrder(account)} className="btn-card-order">
-              <span>⚡</span>
+              <span className="btn-order-spark">⚡</span>
               <span>{t('orderAccount')}</span>
             </button>
           ) : (
-            <button
-              disabled
-              style={{
-                padding: '10px',
-                borderRadius: '12px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: 'var(--text-dim)',
-                fontSize: '13px',
-                fontWeight: 700,
-                border: '1px solid var(--border-light)',
-                cursor: 'not-allowed',
-              }}
-            >
-              {t('soldOutButton')}
+            <button disabled className="btn-card-sold">
+              🔒 {t('soldOutButton')}
             </button>
           )}
         </div>

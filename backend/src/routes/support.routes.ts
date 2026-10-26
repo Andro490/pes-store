@@ -31,6 +31,27 @@ router.post('/message', async (req: Request, res: Response) => {
       },
     });
 
+    // الرد التلقائي: إذا لم يتم إرسال رد تلقائي خلال آخر 12 ساعة
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    const recentAutoReply = await (prisma as any).supportMessage.findFirst({
+      where: {
+        phone: cleanPhone,
+        sender: 'admin',
+        createdAt: { gte: twelveHoursAgo },
+      },
+    });
+
+    if (!recentAutoReply) {
+      await (prisma as any).supportMessage.create({
+        data: {
+          phone: cleanPhone,
+          sender: 'admin',
+          message: 'أهلاً بك! تم استلام رسالتك، سيتم الرد عليك والتواصل معك خلال 24 ساعة ⏳',
+          isRead: false,
+        },
+      });
+    }
+
     res.json({ success: true, data: created });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'فشل إرسال الرسالة', error: error.message });

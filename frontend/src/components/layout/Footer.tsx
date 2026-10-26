@@ -9,36 +9,28 @@ export function Footer({ isAdminLoggedIn, onAdminClick }: FooterProps) {
   const { t } = useLanguage();
 
   return (
-    <footer
-      className="site-footer"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '16px',
-        padding: '24px 30px',
-      }}
-    >
-      <p style={{ margin: 0 }}>{t('footerCopyright')}</p>
+    <footer className="site-footer">
+      <div className="footer-top-line" />
+      <div className="footer-inner">
+        {/* Logo + tagline */}
+        <div className="footer-brand">
+          <div style={{ fontSize: '22px' }}>⚽</div>
+          <div>
+            <div className="footer-brand-name">{t('storeTitle')}</div>
+            <div className="footer-brand-sub">{t('storeSubtitle')}</div>
+          </div>
+        </div>
 
-      <div>
-        <button
-          onClick={onAdminClick}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255, 255, 255, 0.25)',
-            fontSize: '12px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          <span>🔐</span>
-          <span>{isAdminLoggedIn ? t('footerAdminDashboard') : t('footerAdminLogin')}</span>
-        </button>
+        {/* Copyright */}
+        <p className="footer-copy">{t('footerCopyright')}</p>
+
+        {/* Admin Link */}
+        <div>
+          <button onClick={onAdminClick} className="footer-admin-btn">
+            <span>🔐</span>
+            <span>{isAdminLoggedIn ? t('footerAdminDashboard') : t('footerAdminLogin')}</span>
+          </button>
+        </div>
       </div>
     </footer>
   );

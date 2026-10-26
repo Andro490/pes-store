@@ -38,10 +38,11 @@ export function StoreSection({
 
   return (
     <section id="store-section" className="store-section">
-      {/* Header Row */}
+      {/* Section Header */}
       <div className="store-header-row">
         <div>
           <div className="store-title-sub">
+            <span className="store-title-dot" />
             <span>🎮</span>
             <span>{t('storeSectionSubtitle')}</span>
           </div>
@@ -107,48 +108,36 @@ export function StoreSection({
             className="custom-select"
           >
             <option value="featured">{t('sortFeatured')}</option>
-            <option value="strength">{t('sortStrength')}</option>
             <option value="price-asc">{t('sortPriceAsc')}</option>
             <option value="price-desc">{t('sortPriceDesc')}</option>
           </select>
         </div>
       </div>
 
-      {/* Cards Grid */}
+      {/* Cards Grid / States */}
       {loading ? (
-        <div style={{ padding: '80px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚽</div>
-          <p style={{ color: 'var(--text-muted)' }}>{t('loadingAccounts')}</p>
+        <div className="store-loading-state">
+          <div className="loading-ball-spinner">
+            <div className="spinner-ring" />
+            <span>⚽</span>
+          </div>
+          <p style={{ color: 'var(--text-muted)', marginTop: '16px' }}>{t('loadingAccounts')}</p>
         </div>
       ) : error ? (
-        <div
-          style={{
-            padding: '30px',
-            textAlign: 'center',
-            background: 'rgba(239, 68, 68, 0.1)',
-            borderRadius: '16px',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-          }}
-        >
-          <p style={{ color: '#f87171', fontWeight: 'bold', marginBottom: '12px' }}>{error}</p>
+        <div className="store-error-state">
+          <div style={{ fontSize: '36px', marginBottom: '12px' }}>⚠️</div>
+          <p style={{ color: '#f87171', fontWeight: 'bold', marginBottom: '16px' }}>{error}</p>
           <button onClick={onFetchRetry} className="btn-hero-secondary">
             {t('retry')}
           </button>
         </div>
       ) : filteredAccounts.length === 0 ? (
-        <div
-          style={{
-            padding: '60px 20px',
-            textAlign: 'center',
-            background: 'rgba(255,255,255,0.02)',
-            borderRadius: '20px',
-          }}
-        >
-          <div style={{ fontSize: '36px', marginBottom: '10px' }}>🔍</div>
-          <h3 style={{ color: '#fff', fontSize: '18px', marginBottom: '6px' }}>
+        <div className="store-empty-state">
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🔍</div>
+          <h3 style={{ color: '#fff', fontSize: '20px', marginBottom: '8px' }}>
             {t('noAccountsFound')}
           </h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
             {t('noAccountsDesc')}
           </p>
           <button
@@ -163,13 +152,18 @@ export function StoreSection({
         </div>
       ) : (
         <div className="accounts-grid">
-          {filteredAccounts.map((account) => (
-            <AccountCard
+          {filteredAccounts.map((account, idx) => (
+            <div
               key={account.id}
-              account={account}
-              onPreview={onPreview}
-              onOrder={onOrder}
-            />
+              className="card-animate-in"
+              style={{ animationDelay: `${idx * 60}ms` }}
+            >
+              <AccountCard
+                account={account}
+                onPreview={onPreview}
+                onOrder={onOrder}
+              />
+            </div>
           ))}
         </div>
       )}
