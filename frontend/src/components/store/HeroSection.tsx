@@ -127,15 +127,16 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
           {/* Trust Ticker Chips */}
           <div className="hero-trust-chips">
             <span
+              className="trust-chip-item"
               style={{
                 fontSize: '12px',
                 fontWeight: 700,
                 color: '#34d399',
                 background: 'rgba(16, 185, 129, 0.12)',
                 border: '1px solid rgba(16, 185, 129, 0.3)',
-                padding: '4px 12px',
+                padding: '5px 14px',
                 borderRadius: '20px',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
               }}
@@ -143,15 +144,16 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
               <span>✓</span> تسليم فوري في 3 ثوانٍ
             </span>
             <span
+              className="trust-chip-item"
               style={{
                 fontSize: '12px',
                 fontWeight: 700,
                 color: '#f1f5f9',
                 background: 'rgba(148, 163, 184, 0.12)',
                 border: '1px solid rgba(148, 163, 184, 0.3)',
-                padding: '4px 12px',
+                padding: '5px 14px',
                 borderRadius: '20px',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
               }}
@@ -159,15 +161,16 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
               <span>🛡️</span> ضمان كامل Konami ID
             </span>
             <span
+              className="trust-chip-item"
               style={{
                 fontSize: '12px',
                 fontWeight: 700,
                 color: '#f87171',
                 background: 'rgba(220, 38, 38, 0.12)',
                 border: '1px solid rgba(220, 38, 38, 0.3)',
-                padding: '4px 12px',
+                padding: '5px 14px',
                 borderRadius: '20px',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
               }}

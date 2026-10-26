@@ -367,10 +367,26 @@ body {
 .hero-buttons-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 54px;
+  margin-bottom: 32px;
+}
+
+.hero-trust-chips {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.trust-chip-item {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  width: auto !important;
+  flex: 0 0 auto !important;
 }
 
 /* الزرار الرئيسي المطلوب "شراء" — أصفر نيون وذهبي ملكي فخم */
