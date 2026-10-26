@@ -601,6 +601,12 @@ body {
   color: var(--text-muted);
 }
 
+.filter-pill-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .btn-filter-pill:hover {
   background: rgba(220, 38, 38, 0.1);
   color: #f87171;
@@ -1716,12 +1722,147 @@ body {
   .btn-header-buy {
     display: none !important;
   }
+
+  /* ── Hero Section Mobile Alignment & Centering ── */
+  .hero-section {
+    padding: 28px 16px 36px !important;
+  }
   .hero-card-col {
     display: none !important;
   }
   .hero-main-grid {
     grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    margin-bottom: 32px !important;
   }
+  .hero-pill-tag {
+    margin: 0 auto 16px !important;
+  }
+  .hero-text-col {
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  .hero-main-title {
+    text-align: center !important;
+    font-size: clamp(26px, 7vw, 36px) !important;
+    margin-bottom: 14px !important;
+  }
+  .hero-desc {
+    text-align: center !important;
+    margin: 0 auto 26px !important;
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+    max-width: 480px !important;
+  }
+  .hero-buttons-container {
+    justify-content: center !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 0 auto 24px !important;
+    gap: 12px !important;
+  }
+  .btn-hero-primary-buy {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 15px 20px !important;
+    font-size: 17px !important;
+  }
+  .btn-hero-secondary {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 13px 20px !important;
+    font-size: 15px !important;
+  }
+  .hero-trust-chips {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+  .hero-trust-chips span {
+    font-size: 11px !important;
+    padding: 5px 12px !important;
+  }
+
+  /* ── Store Section & Filter Bar Mobile Improvements ── */
+  .store-container {
+    padding: 24px 16px 60px !important;
+  }
+  .store-header-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+    text-align: center !important;
+    margin-bottom: 18px !important;
+  }
+  .store-title-sub {
+    justify-content: center !important;
+  }
+  .store-main-title {
+    text-align: center !important;
+    font-size: 24px !important;
+  }
+  .search-box-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .filter-bar-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+    padding: 16px 14px !important;
+    border-radius: 18px !important;
+    margin-bottom: 24px !important;
+  }
+  .filter-pills-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .filter-group-label {
+    margin: 0 0 6px 0 !important;
+    text-align: right !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #f87171 !important;
+    display: block !important;
+  }
+  .btn-filter-pill {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+  }
+  .filter-pill-content {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  .sort-select-box {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 12px !important;
+    border-top: 1px solid rgba(220, 38, 38, 0.12) !important;
+    font-size: 13px !important;
+  }
+  .custom-select {
+    flex: 1 !important;
+    max-width: 200px !important;
+  }
+
   .stats-grid-wrapper {
     grid-template-columns: repeat(2, 1fr);
   }

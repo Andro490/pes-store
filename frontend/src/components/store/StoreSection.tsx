@@ -71,8 +71,10 @@ export function StoreSection({
             onClick={() => setSelectedPlatform('all')}
             className={`btn-filter-pill ${selectedPlatform === 'all' ? 'active-all' : ''}`}
           >
-            <span>🌐</span>
-            <span>{t('filterAll')}</span>
+            <div className="filter-pill-content">
+              <span>🌐</span>
+              <span>{t('filterAll')}</span>
+            </div>
             <span className="pill-count-bubble">{accounts.length}</span>
           </button>
 
@@ -80,8 +82,10 @@ export function StoreSection({
             onClick={() => setSelectedPlatform('android')}
             className={`btn-filter-pill ${selectedPlatform === 'android' ? 'active-android' : ''}`}
           >
-            <span>🤖</span>
-            <span>{t('filterAndroid')}</span>
+            <div className="filter-pill-content">
+              <span>🤖</span>
+              <span>{t('filterAndroid')}</span>
+            </div>
             <span className="pill-count-bubble">
               {accounts.filter((a) => a.platform === 'android').length}
             </span>
@@ -91,8 +95,10 @@ export function StoreSection({
             onClick={() => setSelectedPlatform('ios')}
             className={`btn-filter-pill ${selectedPlatform === 'ios' ? 'active-ios' : ''}`}
           >
-            <span>🍏</span>
-            <span>{t('filterIos')}</span>
+            <div className="filter-pill-content">
+              <span>🍏</span>
+              <span>{t('filterIos')}</span>
+            </div>
             <span className="pill-count-bubble">
               {accounts.filter((a) => a.platform === 'ios').length}
             </span>

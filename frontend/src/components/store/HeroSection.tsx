@@ -45,7 +45,7 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
         className="hero-main-grid"
       >
         {/* Left Side (Text & CTAs) */}
-        <div>
+        <div className="hero-text-col">
           <h1
             className="hero-main-title"
             style={{
@@ -84,14 +84,7 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
           </p>
 
           {/* CTA Buttons */}
-          <div
-            className="hero-buttons-container"
-            style={{
-              justifyContent: 'flex-start',
-              margin: '0 0 32px 0',
-              gap: '14px',
-            }}
-          >
+          <div className="hero-buttons-container">
             <button
               onClick={onBuyClick}
               id="buy-main-button"
@@ -132,13 +125,7 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
           </div>
 
           {/* Trust Ticker Chips */}
-          <div
-            style={{
-              display: 'flex',
-              gap: '10px',
-              flexWrap: 'wrap',
-            }}
-          >
+          <div className="hero-trust-chips">
             <span
               style={{
                 fontSize: '12px',
