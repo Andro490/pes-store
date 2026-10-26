@@ -84,7 +84,7 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
             <div className="coins-pill-box">
               <div className="coins-sub-txt">{t('coinsBalance')}</div>
               <div className="coins-val-num">
-                <span>🪙</span>
+                <img src="/efootball-coin.png" alt="eFootball Coin" className="coin-img-icon" />
                 <span>{account.coins}</span>
               </div>
             </div>

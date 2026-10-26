@@ -915,8 +915,8 @@ body {
 }
 
 .coins-pill-box {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.25);
   border-radius: 10px;
   padding: 5px 12px;
   text-align: left;
@@ -924,19 +924,41 @@ body {
 
 .coins-sub-txt {
   font-size: 10px;
-  color: #94a3b8;
-  font-weight: 600;
+  color: #fbbf24;
+  font-weight: 700;
 }
 
 .coins-val-num {
-  font-size: 13px;
-  font-weight: 800;
-  color: #f1f5f9;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fde68a;
   font-family: 'Outfit', sans-serif;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
+
+/* eFootball Coin Image Icon with bounce */
+.coin-img-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  animation: coinBounce 1.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
+}
+
+.account-square-card:hover .coin-img-icon,
+.account-square-card.card-hovered .coin-img-icon {
+  animation: coinBounce 0.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.9));
+}
+
+@keyframes coinBounce {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  30%       { transform: translateY(-5px) rotate(5deg); }
+  60%       { transform: translateY(-2px) rotate(-3deg); }
+}
+
 
 /* Title */
 .card-account-title {
