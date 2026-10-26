@@ -310,7 +310,10 @@ export function AdminDashboard({
                 </td>
 
                 <td style={{ padding: '14px 10px', fontWeight: 700, color: '#f1f5f9' }}>
-                  🪙 {account.coins}
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <img src="/efootball-coin.png" alt="coin" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                    <span>{account.coins}</span>
+                  </div>
                 </td>
 
                 <td style={{ padding: '14px 10px' }}>

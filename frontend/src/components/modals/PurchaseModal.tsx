@@ -64,7 +64,7 @@ export function PurchaseModal({
   ];
 
   const buildAltWhatsAppMsg = (methodDetail: string) =>
-    `مرحباً 👋%0Aأريد شراء الحساب التالي عبر *${methodDetail}*:%0A%0A🎮 *${account.title}*%0A💰 السعر: ${formatPrice(account.price)}%0A📱 المنصة: ${account.platform}%0A🆔 ID: ${account.id}%0A%0Aأرجو التأكيد وإرسال بيانات الدفع. شكراً!`;
+    `مرحباً 👋%0Aأريد شراء الحساب التالي عبر *${methodDetail}*:%0A%0A🎮 *${account.title}*%0A💰 السعر: ${formatPrice(account.price)}%0A🪙 الكوينز: ${account.coins}%0A📱 المنصة: ${account.platform}%0A🆔 ID: ${account.id}%0A%0Aأرجو التأكيد وإرسال بيانات الدفع. شكراً!`;
 
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
@@ -377,6 +377,13 @@ export function PurchaseModal({
                 <span style={{ color: 'var(--text-muted)' }}>{t('orderDeviceOS')}</span>
                 <span style={{ fontWeight: 'bold', color: '#fff' }}>
                   {account.platform === 'android' ? '🤖 Android' : '🍏 iOS'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>{t('modalCoins')}:</span>
+                <span style={{ fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <img src="/efootball-coin.png" alt="coin" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                  <span>{account.coins}</span>
                 </span>
               </div>
               {account.stockCount !== undefined && (
