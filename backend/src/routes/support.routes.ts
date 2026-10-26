@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { prisma } from '../services/prisma.service';
 import { authenticate, authorizeRoles } from '../middleware/auth.middleware';
 
@@ -7,6 +8,66 @@ const router = Router();
 function normalizePhone(phone: string): string {
   return String(phone).trim().replace(/[^\d+]/g, '').slice(0, 30);
 }
+
+function generateChatToken(phone: string, deviceId?: string): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET is missing');
+  return jwt.sign(
+    { phone: normalizePhone(phone), deviceId: deviceId || '', role: 'chat_user' },
+    secret,
+    { expiresIn: '90d' }
+  );
+}
+
+function canAccessChat(req: Request, targetPhone: string): boolean {
+  const cleanTarget = normalizePhone(targetPhone);
+
+  // 1. Is it an authenticated admin via cookie or bearer?
+  const cookieToken = (req as any).cookies?.admin_token;
+  const authHeader = req.headers.authorization;
+  const adminToken = cookieToken || (authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined);
+  if (adminToken) {
+    try {
+      const secret = process.env.JWT_SECRET;
+      if (secret) {
+        const decoded = jwt.verify(adminToken, secret) as any;
+        if (decoded && decoded.role === 'admin') return true;
+      }
+    } catch {}
+  }
+
+  // 2. Is it the customer who has the valid chat token?
+  const chatToken =
+    (req.headers['x-chat-token'] as string) ||
+    (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : undefined);
+
+  if (chatToken) {
+    try {
+      const secret = process.env.JWT_SECRET;
+      if (secret) {
+        const decoded = jwt.verify(chatToken, secret) as any;
+        if (decoded && decoded.role === 'chat_user' && normalizePhone(decoded.phone) === cleanTarget) {
+          return true;
+        }
+      }
+    } catch {}
+  }
+
+  return false;
+}
+
+// 0. POST /api/support/session (Issue chat session token for the customer's device)
+router.post('/session', (req: Request, res: Response) => {
+  const { phone } = req.body;
+  const cleanPhone = normalizePhone(phone);
+  if (!cleanPhone || cleanPhone.length < 5 || !/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
+    res.status(400).json({ success: false, message: 'رقم هاتف غير صالح' });
+    return;
+  }
+  const deviceId = (req.headers['x-device-id'] as string) || '';
+  const chatToken = generateChatToken(cleanPhone, deviceId);
+  res.json({ success: true, chatToken });
+});
 
 // 1. POST /api/support/message (User sends a message with mandatory phone)
 router.post('/message', async (req: Request, res: Response) => {
@@ -56,15 +117,17 @@ router.post('/message', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({ success: true, data: created });
+    const deviceId = (req.headers['x-device-id'] as string) || '';
+    const chatToken = generateChatToken(cleanPhone, deviceId);
+    res.json({ success: true, data: created, chatToken });
   } catch (error: any) {
     console.error('Support message error:', error);
     res.status(500).json({ success: false, message: 'فشل إرسال الرسالة' });
   }
 });
 
-// 2. GET /api/support/messages/:phone (Admin reads a conversation)
-router.get('/messages/:phone', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
+// 2. GET /api/support/messages/:phone (Fetch conversation messages)
+router.get('/messages/:phone', async (req: Request, res: Response) => {
   try {
     const { phone } = req.params;
 
@@ -77,6 +140,11 @@ router.get('/messages/:phone', authenticate, authorizeRoles('admin'), async (req
 
     if (!cleanPhone || !/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
       res.status(400).json({ success: false, message: 'رقم الموبايل مطلوب' });
+      return;
+    }
+
+    if (!canAccessChat(req, cleanPhone)) {
+      res.status(403).json({ success: false, message: 'غير مصرح بالاطلاع على هذه المحادثة الخاصة.' });
       return;
     }
 

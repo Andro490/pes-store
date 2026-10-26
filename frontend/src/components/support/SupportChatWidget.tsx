@@ -17,6 +17,30 @@ export function SupportChatWidget() {
     }
   }, [isOpen]);
 
+  // Poll messages every 3.5s if phone is set
+  useEffect(() => {
+    if (!phone) return;
+
+    let isMounted = true;
+    const fetchChat = async () => {
+      try {
+        const res = await supportApi.getMessages(phone);
+        if (res.success && isMounted) {
+          setMessages(res.data);
+        }
+      } catch {
+        // silent fail on background poll
+      }
+    };
+
+    fetchChat();
+    const interval = setInterval(fetchChat, 3500);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [phone, isOpen]);
+
   // Scroll to bottom on new messages
   useEffect(() => {
     if (isOpen) {
@@ -245,8 +269,8 @@ export function SupportChatWidget() {
               <div style={{ color: '#cbd5e1', fontSize: '13px', fontWeight: 600 }}>
                 مرحباً بك! كيف يمكننا مساعدتك اليوم؟
               </div>
-              <div style={{ color: '#64748b', fontSize: '11px', marginTop: '4px' }}>
-                يمكنك إرسال رسالتك لفريق الدعم. عرض الردود داخل المتجر معطل لحماية خصوصية المحادثات
+              <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '4px' }}>
+                اكتب استفسارك وسيقوم فريق الدعم بالرد عليك فوراً 💬
               </div>
             </div>
 

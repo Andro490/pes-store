@@ -178,18 +178,50 @@ export interface SupportConversationItem {
 }
 
 export const supportApi = {
+  initSession: async (phone: string) => {
+    try {
+      const cleanPhone = phone.trim();
+      const res = await request<{ success: boolean; chatToken: string }>('/support/session', {
+        method: 'POST',
+        body: JSON.stringify({ phone: cleanPhone }),
+      });
+      if (res.success && res.chatToken) {
+        localStorage.setItem(`pes_chat_token_${cleanPhone}`, res.chatToken);
+      }
+      return res;
+    } catch {
+      return null;
+    }
+  },
+
   sendMessage: async (phone: string, message: string) => {
     const cleanPhone = phone.trim();
-    return request<{ success: boolean; data: SupportMessageItem }>('/support/message', {
+    const token = localStorage.getItem(`pes_chat_token_${cleanPhone}`) || '';
+    const res = await request<{ success: boolean; data: SupportMessageItem; chatToken?: string }>('/support/message', {
       method: 'POST',
       body: JSON.stringify({ phone: cleanPhone, message }),
+      headers: token ? { 'x-chat-token': token } : {},
     });
+    if (res.chatToken) {
+      localStorage.setItem(`pes_chat_token_${cleanPhone}`, res.chatToken);
+    }
+    return res;
   },
 
   getMessages: async (phone: string) => {
     const cleanPhone = phone.trim();
+    let token = localStorage.getItem(`pes_chat_token_${cleanPhone}`);
+    if (!token) {
+      const sess = await supportApi.initSession(cleanPhone);
+      if (sess?.chatToken) {
+        token = sess.chatToken;
+      }
+    }
     return request<{ success: boolean; data: SupportMessageItem[] }>(
       `/support/messages/${encodeURIComponent(cleanPhone)}`,
+      {
+        headers: token ? { 'x-chat-token': token } : {},
+      }
     );
   },
 
