@@ -325,8 +325,14 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>رصيد الكوينز</div>
-                  <div style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff' }}>🪙 6,500 كوينز</div>
+                  <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <img src="/efootball-coin.png" alt="coin" style={{ width: '12px', height: '12px', objectFit: 'contain' }} />
+                    رصيد الكوينز
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: 900, color: '#fde68a', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    6,500 كوينز
+                    <img src="/efootball-coin.png" alt="eFootball Coin" style={{ width: '22px', height: '22px', objectFit: 'contain', filter: 'drop-shadow(0 0 5px rgba(255,215,0,0.7))', animation: 'coinBounce 1.8s ease-in-out infinite' }} />
+                  </div>
                 </div>
                 <div>
                   <div style={{ fontSize: '10px', color: '#94a3b8' }}>أساطير الإبيك</div>
