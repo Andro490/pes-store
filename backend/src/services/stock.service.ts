@@ -1,4 +1,5 @@
 import { prisma } from './prisma.service';
+import { encryptData, decryptData, maskSensitive } from '../utils/crypto';
 
 export interface ParsedAccountStock {
   email: string;
@@ -38,7 +39,7 @@ export class StockService {
   }
 
   /**
-   * Add multiple stock accounts to a specific PES listing
+   * Add multiple stock accounts to a specific PES listing (Encrypted at rest)
    */
   static async addBulkStock(accountId: string, rawTextOrItems: string | ParsedAccountStock[]) {
     const items = typeof rawTextOrItems === 'string'
@@ -51,8 +52,8 @@ export class StockService {
       data: items.map((item) => ({
         accountId,
         email: item.email,
-        password: item.password,
-        codeUrl: item.codeUrl,
+        password: encryptData(item.password),
+        codeUrl: encryptData(item.codeUrl),
       })),
     });
 
@@ -67,7 +68,7 @@ export class StockService {
   }
 
   /**
-   * Get available stock count and items for an account
+   * Get available stock count and items for an account (with masked credentials for privacy)
    */
   static async getStock(accountId: string) {
     const [stocks, count] = await Promise.all([
@@ -78,7 +79,14 @@ export class StockService {
       prisma.accountStock.count({ where: { accountId } }),
     ]);
 
-    return { count, stocks };
+    // Mask passwords for admin listing to prevent screen shoulder-surfing / credential leakage
+    const sanitizedStocks = stocks.map((s) => ({
+      ...s,
+      password: maskSensitive(decryptData(s.password)),
+      codeUrl: s.codeUrl.startsWith('enc:') ? '[محمي ومشفّر]' : s.codeUrl,
+    }));
+
+    return { count, stocks: sanitizedStocks };
   }
 
   /**
@@ -99,8 +107,8 @@ export class StockService {
                 accountId: existingSale.accountId,
                 accountTitle: existingSale.accountTitle,
                 email: existingSale.email,
-                password: existingSale.password,
-                codeUrl: existingSale.codeUrl,
+                password: decryptData(existingSale.password),
+                codeUrl: decryptData(existingSale.codeUrl),
                 price: existingSale.price,
               },
               alreadyDelivered: true,
@@ -131,14 +139,14 @@ export class StockService {
           throw new Error('نفدت الكمية المتوفرة من هذا الحساب حالياً! يرجى اختيار حساب آخر');
         }
 
-        // Archive in SoldAccount history
+        // Archive in SoldAccount history (keep encrypted at rest)
         await tx.soldAccount.create({
           data: {
             accountId: account.id,
             accountTitle: account.title,
             email: stockItem.email,
-            password: stockItem.password,
-            codeUrl: stockItem.codeUrl,
+            password: stockItem.password, // Already encrypted
+            codeUrl: stockItem.codeUrl,   // Already encrypted
             price: account.price,
             buyerPhone: buyerPhone || null,
             transactionId: transactionId || null,
@@ -159,14 +167,15 @@ export class StockService {
           });
         }
 
+        // Return decrypted credentials to the legitimate buyer
         return {
           success: true,
           deliveredAccount: {
             accountId: account.id,
             accountTitle: account.title,
             email: stockItem.email,
-            password: stockItem.password,
-            codeUrl: stockItem.codeUrl,
+            password: decryptData(stockItem.password),
+            codeUrl: decryptData(stockItem.codeUrl),
             platform: account.platform,
             price: account.price,
           },
@@ -186,8 +195,8 @@ export class StockService {
               accountId: existingSale.accountId,
               accountTitle: existingSale.accountTitle,
               email: existingSale.email,
-              password: existingSale.password,
-              codeUrl: existingSale.codeUrl,
+              password: decryptData(existingSale.password),
+              codeUrl: decryptData(existingSale.codeUrl),
               price: existingSale.price,
             },
             alreadyDelivered: true,

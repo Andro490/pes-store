@@ -245,16 +245,31 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
     }
 
     const { username, password } = req.body;
-    const adminUser = process.env.ADMIN_USERNAME || 'admin';
-    const adminPass = process.env.ADMIN_PASSWORD || 'pes2025@admin';
+    const adminUser = process.env.ADMIN_USERNAME;
+    const adminPass = process.env.ADMIN_PASSWORD;
+    const jwtSecret = process.env.JWT_SECRET;
+
+    if (!adminUser || !adminPass || !jwtSecret) {
+      console.error('CRITICAL: ADMIN_USERNAME, ADMIN_PASSWORD or JWT_SECRET is not configured in .env');
+      res.status(500).json({ success: false, message: 'خطأ في إعدادات النظام الأمنية. يرجى مراجعة المسؤول.' });
+      return;
+    }
 
     if (!username || !password) {
       res.status(400).json({ success: false, message: 'اسم المستخدم وكلمة المرور مطلوبة' });
       return;
     }
 
-    // 2. Validate Credentials
-    if (username.trim() !== adminUser.trim() || password !== adminPass) {
+    // 2. Validate Credentials using timing-safe comparison
+    const uA = Buffer.from(username.trim());
+    const uB = Buffer.from(adminUser.trim());
+    const pA = Buffer.from(password);
+    const pB = Buffer.from(adminPass);
+
+    const isUserMatch = uA.length === uB.length && require('crypto').timingSafeEqual(uA, uB);
+    const isPassMatch = pA.length === pB.length && require('crypto').timingSafeEqual(pA, pB);
+
+    if (!isUserMatch || !isPassMatch) {
       const failInfo = registerFailure(req);
 
       if (failInfo.isLocked) {
@@ -284,9 +299,17 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
     // Generate Admin JWT token
     const token = jwt.sign(
       { id: 'admin-root', email: `${adminUser}@pes.store`, role: 'admin' },
-      process.env.JWT_SECRET || 'pes_store_jwt_super_secret_key_2025',
+      jwtSecret,
       { expiresIn: (process.env.JWT_EXPIRES_IN as any) || '7d' }
     );
+
+    // Set secure HttpOnly cookie for XSS protection
+    res.cookie('admin_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     res.json({
       success: true,
@@ -297,8 +320,19 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'خطأ في الخادم', error: String(error) });
+    console.error('adminLogin error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم أثناء تسجيل الدخول' });
   }
+};
+
+// ─── Admin Logout ─────────────────────────────────────────────────────────────
+export const adminLogout = (_req: Request, res: Response): void => {
+  res.clearCookie('admin_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+  res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
 };
 
 // ─── Admin Verify Token ───────────────────────────────────────────────────────

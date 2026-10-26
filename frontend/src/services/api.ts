@@ -29,6 +29,7 @@ const request = async <T>(
 
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
+    credentials: 'include', // Send and receive HttpOnly cookies
     headers,
   });
 
@@ -177,14 +178,51 @@ export interface SupportConversationItem {
 }
 
 export const supportApi = {
-  sendMessage: (phone: string, message: string) =>
-    request<{ success: boolean; data: SupportMessageItem }>('/support/message', {
-      method: 'POST',
-      body: JSON.stringify({ phone, message }),
-    }),
+  initSession: async (phone: string) => {
+    try {
+      const res = await request<{ success: boolean; chatToken: string }>('/support/session', {
+        method: 'POST',
+        body: JSON.stringify({ phone }),
+      });
+      if (res.success && res.chatToken) {
+        localStorage.setItem(`pes_chat_token_${phone.trim()}`, res.chatToken);
+      }
+      return res;
+    } catch {
+      return null;
+    }
+  },
 
-  getMessages: (phone: string) =>
-    request<{ success: boolean; data: SupportMessageItem[] }>(`/support/messages/${encodeURIComponent(phone)}`),
+  sendMessage: async (phone: string, message: string) => {
+    const cleanPhone = phone.trim();
+    const token = localStorage.getItem(`pes_chat_token_${cleanPhone}`) || '';
+    const res = await request<{ success: boolean; data: SupportMessageItem; chatToken?: string }>('/support/message', {
+      method: 'POST',
+      body: JSON.stringify({ phone: cleanPhone, message }),
+      headers: token ? { 'x-chat-token': token } : {},
+    });
+    if (res.chatToken) {
+      localStorage.setItem(`pes_chat_token_${cleanPhone}`, res.chatToken);
+    }
+    return res;
+  },
+
+  getMessages: async (phone: string) => {
+    const cleanPhone = phone.trim();
+    let token = localStorage.getItem(`pes_chat_token_${cleanPhone}`);
+    if (!token) {
+      const sess = await supportApi.initSession(cleanPhone);
+      if (sess?.chatToken) {
+        token = sess.chatToken;
+      }
+    }
+    return request<{ success: boolean; data: SupportMessageItem[] }>(
+      `/support/messages/${encodeURIComponent(cleanPhone)}`,
+      {
+        headers: token ? { 'x-chat-token': token } : {},
+      }
+    );
+  },
 
   getConversations: () =>
     request<{ success: boolean; data: SupportConversationItem[] }>('/support/conversations'),

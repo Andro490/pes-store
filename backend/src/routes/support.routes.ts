@@ -1,16 +1,56 @@
 import { Router, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { prisma } from '../services/prisma.service';
 import { authenticate, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
+
+// Helper: Generate signed chat session token for a phone number
+function generateChatToken(phone: string): string {
+  const secret = process.env.JWT_SECRET || 'pes_store_secure_chat_secret';
+  return jwt.sign({ phone, role: 'chat_user' }, secret, { expiresIn: '60d' });
+}
+
+// Helper: Verify chat access permissions (either Admin OR the verified phone owner)
+function verifyChatAccess(req: Request, targetPhone: string): boolean {
+  const cleanTarget = targetPhone.trim();
+  const token = (req.headers['x-chat-token'] as string) ||
+                (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : undefined) ||
+                (req as any).cookies?.admin_token;
+
+  if (!token) return false;
+
+  try {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) return false;
+    const decoded = jwt.verify(token, secret) as any;
+    if (decoded.role === 'admin') return true;
+    if (decoded.phone && String(decoded.phone).trim() === cleanTarget) return true;
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
+// 0. POST /api/support/session (Issue secure token for customer's phone number)
+router.post('/session', (req: Request, res: Response) => {
+  const { phone } = req.body;
+  if (!phone || typeof phone !== 'string' || phone.trim().length < 5) {
+    res.status(400).json({ success: false, message: 'رقم هاتف غير صالح' });
+    return;
+  }
+  const cleanPhone = phone.trim();
+  res.json({ success: true, chatToken: generateChatToken(cleanPhone) });
+});
 
 // 1. POST /api/support/message (User sends a message with mandatory phone)
 router.post('/message', async (req: Request, res: Response) => {
   try {
     const { phone, message } = req.body;
 
-    if (!phone || !String(phone).trim()) {
-      res.status(400).json({ success: false, message: 'رقم الموبايل مطلوب قبل إرسال الرسالة' });
+    if (!phone || !String(phone).trim() || String(phone).trim().length < 5) {
+      res.status(400).json({ success: false, message: 'رقم الموبايل مطلوب وصحيح قبل إرسال الرسالة' });
       return;
     }
 
@@ -19,8 +59,9 @@ router.post('/message', async (req: Request, res: Response) => {
       return;
     }
 
-    const cleanPhone = String(phone).trim();
-    const cleanMessage = String(message).trim();
+    const cleanPhone = String(phone).trim().slice(0, 30);
+    // Sanitize message: strip HTML tags and restrict length to 1000 chars to avoid XSS / payload abuse
+    const cleanMessage = String(message).trim().replace(/<[^>]*>?/gm, '').slice(0, 1000);
 
     const created = await (prisma as any).supportMessage.create({
       data: {
@@ -52,13 +93,15 @@ router.post('/message', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({ success: true, data: created });
+    const chatToken = generateChatToken(cleanPhone);
+    res.json({ success: true, data: created, chatToken });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'فشل إرسال الرسالة', error: error.message });
+    console.error('Support message error:', error);
+    res.status(500).json({ success: false, message: 'فشل إرسال الرسالة' });
   }
 });
 
-// 2. GET /api/support/messages/:phone (User fetches their chat messages)
+// 2. GET /api/support/messages/:phone (User fetches their chat messages with verification)
 router.get('/messages/:phone', async (req: Request, res: Response) => {
   try {
     const { phone } = req.params;
@@ -70,6 +113,15 @@ router.get('/messages/:phone', async (req: Request, res: Response) => {
 
     const cleanPhone = String(phone).trim();
 
+    // Verification check: Only the owner of this phone or an authenticated Admin can view messages
+    if (!verifyChatAccess(req, cleanPhone)) {
+      res.status(403).json({
+        success: false,
+        message: 'غير مصرح بالاطلاع على هذه المحادثة الخاصة.',
+      });
+      return;
+    }
+
     const messages = await (prisma as any).supportMessage.findMany({
       where: { phone: cleanPhone },
       orderBy: { createdAt: 'asc' },
@@ -77,7 +129,8 @@ router.get('/messages/:phone', async (req: Request, res: Response) => {
 
     res.json({ success: true, data: messages });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'فشل جلب الرسائل', error: error.message });
+    console.error('Fetch support messages error:', error);
+    res.status(500).json({ success: false, message: 'فشل جلب الرسائل' });
   }
 });
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getMe, adminLogin, verifyAdmin, checkAdminLockStatus } from '../controllers/auth.controller';
+import { register, login, getMe, adminLogin, adminLogout, verifyAdmin, checkAdminLockStatus } from '../controllers/auth.controller';
 import { authenticate, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -18,6 +18,9 @@ router.get('/admin-status', checkAdminLockStatus);
 
 // POST /api/auth/admin-login (Admin credentials from .env)
 router.post('/admin-login', adminLogin);
+
+// POST /api/auth/admin-logout (Clear HttpOnly cookie)
+router.post('/admin-logout', adminLogout);
 
 // GET /api/auth/admin-verify
 router.get('/admin-verify', authenticate, authorizeRoles('admin'), verifyAdmin);

@@ -13,16 +13,29 @@ declare global {
 
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
+  const cookieToken = (req as any).cookies?.admin_token;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  let token: string | undefined;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (cookieToken) {
+    token = cookieToken;
+  }
+
+  if (!token) {
     res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
     return;
   }
 
-  const token = authHeader.split(' ')[1];
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as AuthPayload;
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error('CRITICAL: JWT_SECRET environment variable is missing!');
+      res.status(500).json({ success: false, message: 'Server configuration error' });
+      return;
+    }
+    const decoded = jwt.verify(token, jwtSecret) as AuthPayload;
     req.user = decoded;
     next();
   } catch {
