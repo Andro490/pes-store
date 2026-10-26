@@ -1,11 +1,11 @@
 import { useLanguage } from '../../i18n/LanguageContext';
 
 interface FooterProps {
-  isAdminLoggedIn: boolean;
-  onAdminClick: () => void;
+  isAdminLoggedIn?: boolean;
+  onAdminClick?: () => void;
 }
 
-export function Footer({ isAdminLoggedIn, onAdminClick }: FooterProps) {
+export function Footer({}: FooterProps) {
   const { t } = useLanguage();
 
   return (
@@ -23,14 +23,6 @@ export function Footer({ isAdminLoggedIn, onAdminClick }: FooterProps) {
 
         {/* Copyright */}
         <p className="footer-copy">{t('footerCopyright')}</p>
-
-        {/* Admin Link */}
-        <div>
-          <button onClick={onAdminClick} className="footer-admin-btn">
-            <span>🔐</span>
-            <span>{isAdminLoggedIn ? t('footerAdminDashboard') : t('footerAdminLogin')}</span>
-          </button>
-        </div>
       </div>
     </footer>
   );

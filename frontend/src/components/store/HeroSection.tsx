@@ -19,14 +19,14 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
       <div
         className="hero-pill-tag"
         style={{
-          background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(255, 230, 0, 0.08))',
-          border: '1px solid rgba(212, 175, 55, 0.35)',
-          boxShadow: '0 0 22px rgba(255, 215, 0, 0.18)',
+          background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(148, 163, 184, 0.1))',
+          border: '1px solid rgba(220, 38, 38, 0.4)',
+          boxShadow: '0 0 22px rgba(220, 38, 38, 0.25)',
           padding: '8px 22px',
         }}
       >
-        <span className="pulse-dot" style={{ background: '#ffe600', boxShadow: '0 0 14px #ffe600' }} />
-        <span style={{ fontWeight: 800, letterSpacing: '0.5px', color: '#ffd700' }}>
+        <span className="pulse-dot" style={{ background: '#ef4444', boxShadow: '0 0 14px #ef4444' }} />
+        <span style={{ fontWeight: 800, letterSpacing: '0.5px', color: '#f1f5f9' }}>
           ⚽ eFootball™ 2026 OFFICIAL MARKETPLACE
         </span>
       </div>
@@ -59,10 +59,10 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
             <span
               className="gradient-pes-text"
               style={{
-                background: 'linear-gradient(135deg, #ffffff 10%, #ffe600 45%, #f59e0b 80%, #d4af37 100%)',
+                background: 'linear-gradient(135deg, #ffffff 15%, #f87171 45%, #ef4444 75%, #dc2626 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                textShadow: '0 0 28px rgba(255, 215, 0, 0.35)',
+                textShadow: '0 0 30px rgba(239, 68, 68, 0.4)',
               }}
             >
               {t('heroTitlePart2')}
@@ -97,10 +97,10 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
               id="buy-main-button"
               className="btn-hero-primary-buy"
               style={{
-                background: 'linear-gradient(135deg, #ffe600 0%, #f59e0b 60%, #b45309 100%)',
-                color: '#060709',
-                boxShadow: '0 8px 32px rgba(245, 158, 11, 0.5), 0 0 20px rgba(255, 230, 0, 0.25)',
-                border: '1px solid rgba(255, 235, 150, 0.6)',
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)',
+                color: '#ffffff',
+                boxShadow: '0 8px 32px rgba(220, 38, 38, 0.55), 0 0 20px rgba(239, 68, 68, 0.35)',
+                border: '1px solid rgba(248, 113, 113, 0.6)',
               }}
             >
               <span style={{ fontSize: '22px' }}>⚡</span>
@@ -108,8 +108,8 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
               <span
                 className="btn-hero-sub-tag"
                 style={{
-                  background: 'rgba(0, 0, 0, 0.35)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  background: 'rgba(0, 0, 0, 0.45)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
                   color: '#ffffff',
                 }}
               >
@@ -121,9 +121,9 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
               href="#store-section"
               className="btn-hero-secondary"
               style={{
-                border: '1px solid rgba(212, 175, 55, 0.25)',
-                background: 'rgba(255, 215, 0, 0.05)',
-                color: '#facc15',
+                border: '1px solid rgba(148, 163, 184, 0.3)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: '#f1f5f9',
               }}
             >
               <span>{t('heroBrowseAccounts')}</span>
@@ -159,9 +159,9 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
               style={{
                 fontSize: '12px',
                 fontWeight: 700,
-                color: '#ffd700',
-                background: 'rgba(212, 175, 55, 0.12)',
-                border: '1px solid rgba(212, 175, 55, 0.3)',
+                color: '#f1f5f9',
+                background: 'rgba(148, 163, 184, 0.12)',
+                border: '1px solid rgba(148, 163, 184, 0.3)',
                 padding: '4px 12px',
                 borderRadius: '20px',
                 display: 'flex',
@@ -175,9 +175,9 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
               style={{
                 fontSize: '12px',
                 fontWeight: 700,
-                color: '#fbbf24',
-                background: 'rgba(245, 158, 11, 0.12)',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
+                color: '#f87171',
+                background: 'rgba(220, 38, 38, 0.12)',
+                border: '1px solid rgba(220, 38, 38, 0.3)',
                 padding: '4px 12px',
                 borderRadius: '20px',
                 display: 'flex',
@@ -209,11 +209,11 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
               borderRadius: '24px',
               background: 'linear-gradient(145deg, #12141c 0%, #08090d 100%)',
               border: isCardHovered
-                ? '2px solid #ffe600'
-                : '2px solid rgba(212, 175, 55, 0.55)',
+                ? '2px solid #ef4444'
+                : '2px solid rgba(220, 38, 38, 0.5)',
               boxShadow: isCardHovered
-                ? '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(255, 230, 0, 0.35)'
-                : '0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(212, 175, 55, 0.2)',
+                ? '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 45px rgba(239, 68, 68, 0.45)'
+                : '0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(220, 38, 38, 0.25)',
               transform: isCardHovered
                 ? 'perspective(1200px) rotateY(-2deg) rotateX(2deg) translateY(-8px) scale(1.03)'
                 : 'perspective(1200px) rotateY(-8deg) rotateX(4deg) translateY(0px)',
@@ -228,7 +228,7 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
               style={{
                 position: 'absolute',
                 inset: 0,
-                background: 'linear-gradient(115deg, transparent 30%, rgba(255, 215, 0, 0.2) 50%, transparent 70%)',
+                background: 'linear-gradient(115deg, transparent 30%, rgba(239, 68, 68, 0.2) 50%, transparent 70%)',
                 transform: isCardHovered ? 'translateX(100%)' : 'translateX(-100%)',
                 transition: 'transform 0.8s ease',
                 pointerEvents: 'none',
@@ -270,14 +270,14 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
                   position: 'absolute',
                   top: '12px',
                   right: '12px',
-                  background: 'linear-gradient(135deg, #ffe600, #f59e0b)',
-                  color: '#08090c',
+                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  color: '#ffffff',
                   padding: '4px 12px',
                   borderRadius: '12px',
                   fontSize: '11px',
                   fontWeight: 900,
                   letterSpacing: '1px',
-                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
+                  boxShadow: '0 4px 12px rgba(220, 38, 38, 0.45)',
                 }}
               >
                 ⭐ EPIC BIG TIME
@@ -289,10 +289,10 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
                   position: 'absolute',
                   top: '12px',
                   left: '12px',
-                  background: 'rgba(0, 0, 0, 0.7)',
+                  background: 'rgba(0, 0, 0, 0.75)',
                   backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(212, 175, 55, 0.3)',
-                  color: '#ffd700',
+                  border: '1px solid rgba(148, 163, 184, 0.35)',
+                  color: '#e2e8f0',
                   padding: '4px 10px',
                   borderRadius: '10px',
                   fontSize: '11px',
@@ -305,7 +305,7 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
 
             {/* Card Body */}
             <div style={{ padding: '16px 18px', textAlign: 'right' }}>
-              <div style={{ fontSize: '11px', color: '#ffd700', fontWeight: 800, marginBottom: '4px' }}>
+              <div style={{ fontSize: '11px', color: '#f87171', fontWeight: 800, marginBottom: '4px' }}>
                 ⭐ تشكيلة أساطير خارقة
               </div>
               <h3 style={{ fontSize: '16px', fontWeight: 900, color: '#fff', marginBottom: '12px' }}>
@@ -321,30 +321,30 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
                   borderRadius: '12px',
                   padding: '10px',
                   marginBottom: '14px',
-                  border: '1px solid rgba(212, 175, 55, 0.15)',
+                  border: '1px solid rgba(220, 38, 38, 0.2)',
                 }}
               >
                 <div>
                   <div style={{ fontSize: '10px', color: '#94a3b8' }}>رصيد الكوينز</div>
-                  <div style={{ fontSize: '14px', fontWeight: 900, color: '#ffd700' }}>🪙 6,500 كوينز</div>
+                  <div style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff' }}>🪙 6,500 كوينز</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '10px', color: '#94a3b8' }}>أساطير الإبيك</div>
-                  <div style={{ fontSize: '14px', fontWeight: 900, color: '#ffe600' }}>⭐ 19 أسطورة</div>
+                  <div style={{ fontSize: '14px', fontWeight: 900, color: '#ef4444' }}>⭐ 19 أسطورة</div>
                 </div>
               </div>
 
               {/* Action Button inside showcase */}
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #ffe600, #f59e0b)',
-                  color: '#08090c',
+                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  color: '#ffffff',
                   padding: '10px',
                   borderRadius: '12px',
                   textAlign: 'center',
                   fontWeight: 900,
                   fontSize: '13px',
-                  boxShadow: '0 4px 16px rgba(245, 158, 11, 0.45)',
+                  boxShadow: '0 4px 16px rgba(220, 38, 38, 0.45)',
                 }}
               >
                 ⚡ احصل على حساب مثل هذا الآن
@@ -356,14 +356,14 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
 
       {/* Quick Stats Grid */}
       <div className="stats-grid-wrapper">
-        <div className="stat-item-box" style={{ border: '1px solid rgba(212, 175, 55, 0.22)' }}>
+        <div className="stat-item-box" style={{ border: '1px solid rgba(220, 38, 38, 0.25)' }}>
           <div className="stat-icon">🏆</div>
-          <div className="stat-value" style={{ color: '#ffd700' }}>+{totalAccounts}</div>
+          <div className="stat-value" style={{ color: '#ef4444' }}>+{totalAccounts}</div>
           <div className="stat-label">{t('statGuaranteedAccounts')}</div>
         </div>
-        <div className="stat-item-box" style={{ border: '1px solid rgba(245, 158, 11, 0.22)' }}>
+        <div className="stat-item-box" style={{ border: '1px solid rgba(148, 163, 184, 0.25)' }}>
           <div className="stat-icon">⭐</div>
-          <div className="stat-value" style={{ color: '#fbbf24' }}>4.9/5</div>
+          <div className="stat-value" style={{ color: '#f1f5f9' }}>4.9/5</div>
           <div className="stat-label">{t('statCustomerRating')}</div>
         </div>
         <div className="stat-item-box" style={{ border: '1px solid rgba(16, 185, 129, 0.22)' }}>
@@ -371,9 +371,9 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
           <div className="stat-value" style={{ color: '#34d399' }}>{t('statThreeMins')}</div>
           <div className="stat-label">{t('statInstantDelivery')}</div>
         </div>
-        <div className="stat-item-box" style={{ border: '1px solid rgba(212, 175, 55, 0.22)' }}>
+        <div className="stat-item-box" style={{ border: '1px solid rgba(220, 38, 38, 0.25)' }}>
           <div className="stat-icon">💳</div>
-          <div className="stat-value" style={{ color: '#facc15' }}>{t('statPaymentMethods')}</div>
+          <div className="stat-value" style={{ color: '#f87171' }}>{t('statPaymentMethods')}</div>
           <div className="stat-label">{t('statInstantCheckout')}</div>
         </div>
       </div>

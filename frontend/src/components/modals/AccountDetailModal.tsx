@@ -46,7 +46,7 @@ export function AccountDetailModal({ account, onClose, onOrder }: AccountDetailM
           <div className="detail-stats-grid">
             <div className="detail-stat-box">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('modalCoins')}</div>
-              <div style={{ fontSize: '16px', fontWeight: '900', color: '#f59e0b' }}>🪙 {account.coins}</div>
+              <div style={{ fontSize: '16px', fontWeight: '900', color: '#ffffff' }}>🪙 {account.coins}</div>
             </div>
             <div className="detail-stat-box">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('modalEpic')}</div>

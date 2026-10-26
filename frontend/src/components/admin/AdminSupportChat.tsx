@@ -128,7 +128,7 @@ export function AdminSupportChat() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          borderLeft: '1px solid rgba(212, 175, 55, 0.15)',
+          borderLeft: '1px solid rgba(220, 38, 38, 0.2)',
           background: 'linear-gradient(180deg, rgba(16, 18, 26, 0.9) 0%, rgba(8, 9, 13, 0.95) 100%)',
         }}
       >
@@ -138,7 +138,7 @@ export function AdminSupportChat() {
             <div
               style={{
                 padding: '16px 20px',
-                borderBottom: '1px solid rgba(212, 175, 55, 0.15)',
+                borderBottom: '1px solid rgba(220, 38, 38, 0.2)',
                 background: 'rgba(255, 255, 255, 0.02)',
                 display: 'flex',
                 alignItems: 'center',
@@ -157,7 +157,7 @@ export function AdminSupportChat() {
                 />
                 <span style={{ fontWeight: 800, fontSize: '15px', color: '#fff' }}>
                   المحادثة مع:{' '}
-                  <span style={{ color: '#ffd700', direction: 'ltr', display: 'inline-block' }}>
+                  <span style={{ color: '#ef4444', direction: 'ltr', display: 'inline-block' }}>
                     {selectedPhone}
                   </span>
                 </span>
@@ -219,16 +219,16 @@ export function AdminSupportChat() {
                       <div
                         style={{
                           background: isAdmin
-                            ? 'linear-gradient(135deg, #ffe600, #f59e0b)'
+                            ? 'linear-gradient(135deg, #ef4444, #dc2626)'
                             : 'rgba(255, 255, 255, 0.07)',
-                          color: isAdmin ? '#08090c' : '#fff',
+                          color: '#ffffff',
                           padding: '12px 18px',
                           borderRadius: isAdmin ? '16px 16px 16px 4px' : '16px 16px 4px 16px',
                           fontSize: '13px',
                           fontWeight: isAdmin ? 700 : 400,
                           lineHeight: '1.6',
-                          border: isAdmin ? 'none' : '1px solid rgba(212, 175, 55, 0.18)',
-                          boxShadow: isAdmin ? '0 4px 16px rgba(245, 158, 11, 0.35)' : 'none',
+                          border: isAdmin ? 'none' : '1px solid rgba(148, 163, 184, 0.2)',
+                          boxShadow: isAdmin ? '0 4px 16px rgba(220, 38, 38, 0.35)' : 'none',
                           wordBreak: 'break-word',
                         }}
                       >
@@ -256,7 +256,7 @@ export function AdminSupportChat() {
               onSubmit={handleSendReply}
               style={{
                 padding: '14px 20px',
-                borderTop: '1px solid rgba(212, 175, 55, 0.15)',
+                borderTop: '1px solid rgba(220, 38, 38, 0.2)',
                 background: 'rgba(10, 11, 16, 0.95)',
                 display: 'flex',
                 gap: '10px',
@@ -271,7 +271,7 @@ export function AdminSupportChat() {
                 style={{
                   flex: 1,
                   background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(212, 175, 55, 0.2)',
+                  border: '1px solid rgba(148, 163, 184, 0.25)',
                   color: '#fff',
                   borderRadius: '12px',
                   padding: '12px 16px',
@@ -284,16 +284,16 @@ export function AdminSupportChat() {
                 disabled={!replyText.trim() || isSending}
                 style={{
                   background: (!replyText.trim() || isSending)
-                    ? 'rgba(212, 175, 55, 0.25)'
-                    : 'linear-gradient(135deg, #ffe600, #f59e0b)',
-                  color: '#08090c',
+                    ? 'rgba(220, 38, 38, 0.25)'
+                    : 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  color: '#ffffff',
                   border: 'none',
                   borderRadius: '12px',
                   padding: '12px 24px',
                   fontSize: '13px',
                   fontWeight: 900,
                   cursor: (!replyText.trim() || isSending) ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)',
+                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
                   transition: 'all 0.2s',
                 }}
               >
@@ -330,7 +330,7 @@ export function AdminSupportChat() {
         <div
           style={{
             padding: '16px 20px',
-            borderBottom: '1px solid rgba(212, 175, 55, 0.15)',
+            borderBottom: '1px solid rgba(220, 38, 38, 0.2)',
             fontWeight: 800,
             fontSize: '15px',
             color: '#fff',
@@ -342,8 +342,8 @@ export function AdminSupportChat() {
           <span>المحادثات</span>
           <span
             style={{
-              background: 'rgba(212, 175, 55, 0.18)',
-              color: '#ffd700',
+              background: 'rgba(220, 38, 38, 0.2)',
+              color: '#f87171',
               padding: '2px 8px',
               borderRadius: '10px',
               fontSize: '11px',
@@ -369,14 +369,14 @@ export function AdminSupportChat() {
                   style={{
                     padding: '14px 16px',
                     borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                    background: isSelected ? 'rgba(212, 175, 55, 0.12)' : 'transparent',
-                    borderRight: isSelected ? '3px solid #ffd700' : '3px solid transparent',
+                    background: isSelected ? 'rgba(220, 38, 38, 0.12)' : 'transparent',
+                    borderRight: isSelected ? '3px solid #ef4444' : '3px solid transparent',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: 800, fontSize: '13px', color: isSelected ? '#ffd700' : '#fff', direction: 'ltr' }}>
+                    <span style={{ fontWeight: 800, fontSize: '13px', color: isSelected ? '#ef4444' : '#fff', direction: 'ltr' }}>
                       {conv.phone}
                     </span>
                     <span style={{ fontSize: '10px', color: '#64748b' }}>
@@ -400,8 +400,8 @@ export function AdminSupportChat() {
                     <div style={{ marginTop: '6px' }}>
                       <span
                         style={{
-                          background: '#ffd700',
-                          color: '#08090c',
+                          background: '#ef4444',
+                          color: '#ffffff',
                           borderRadius: '10px',
                           padding: '1px 7px',
                           fontSize: '10px',

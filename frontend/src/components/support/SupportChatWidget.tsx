@@ -119,9 +119,9 @@ export function SupportChatWidget() {
           bottom: '24px',
           left: '24px',
           zIndex: 9999,
-          background: 'linear-gradient(135deg, #ffe600, #f59e0b)',
-          color: '#08090c',
-          border: '1px solid rgba(255, 235, 150, 0.6)',
+          background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+          color: '#ffffff',
+          border: '1px solid rgba(248, 113, 113, 0.6)',
           borderRadius: '50px',
           padding: '12px 20px',
           fontSize: '14px',
@@ -130,7 +130,7 @@ export function SupportChatWidget() {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          boxShadow: '0 8px 24px rgba(245, 158, 11, 0.45)',
+          boxShadow: '0 8px 24px rgba(220, 38, 38, 0.45)',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
@@ -175,9 +175,9 @@ export function SupportChatWidget() {
             height: '520px',
             maxHeight: 'calc(100vh - 120px)',
             background: 'linear-gradient(180deg, #10121a 0%, #08090d 100%)',
-            border: '1px solid rgba(212, 175, 55, 0.3)',
+            border: '1px solid rgba(220, 38, 38, 0.35)',
             borderRadius: '24px',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.15)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(220, 38, 38, 0.2)',
             zIndex: 10000,
             display: 'flex',
             flexDirection: 'column',
@@ -188,15 +188,15 @@ export function SupportChatWidget() {
           <div
             style={{
               padding: '16px 20px',
-              background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(255, 230, 0, 0.08))',
-              borderBottom: '1px solid rgba(212, 175, 55, 0.25)',
+              background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(148, 163, 184, 0.08))',
+              borderBottom: '1px solid rgba(220, 38, 38, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px', color: '#ffd700' }}>💬</span>
+              <span style={{ fontSize: '18px', color: '#ef4444' }}>💬</span>
               <span style={{ fontWeight: 800, fontSize: '16px', color: '#fff' }}>الدعم الفني</span>
             </div>
             <button
@@ -219,11 +219,11 @@ export function SupportChatWidget() {
             <div
               style={{
                 padding: '14px 16px',
-                background: 'rgba(212, 175, 55, 0.08)',
-                borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
+                background: 'rgba(220, 38, 38, 0.08)',
+                borderBottom: '1px solid rgba(220, 38, 38, 0.2)',
               }}
             >
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffd700', marginBottom: '8px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#f87171', marginBottom: '8px' }}>
                 📱 رقم الموبايل مطلوب أولاً للتواصل والرد عليك:
               </div>
               <form onSubmit={handleSavePhone} style={{ display: 'flex', gap: '8px' }}>
@@ -236,7 +236,7 @@ export function SupportChatWidget() {
                   style={{
                     flex: 1,
                     background: '#090a0f',
-                    border: '1px solid rgba(212, 175, 55, 0.35)',
+                    border: '1px solid rgba(220, 38, 38, 0.35)',
                     color: '#fff',
                     borderRadius: '10px',
                     padding: '8px 12px',
@@ -248,8 +248,8 @@ export function SupportChatWidget() {
                 <button
                   type="submit"
                   style={{
-                    background: 'linear-gradient(135deg, #ffe600, #f59e0b)',
-                    color: '#08090c',
+                    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                    color: '#ffffff',
                     border: 'none',
                     borderRadius: '10px',
                     padding: '8px 14px',
@@ -275,7 +275,7 @@ export function SupportChatWidget() {
               }}
             >
               <span style={{ color: '#94a3b8' }}>
-                رقمك: <strong style={{ color: '#ffd700', direction: 'ltr', display: 'inline-block' }}>{phone}</strong>
+                رقمك: <strong style={{ color: '#f87171', direction: 'ltr', display: 'inline-block' }}>{phone}</strong>
               </span>
               <button
                 type="button"
@@ -283,7 +283,7 @@ export function SupportChatWidget() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#ffe600',
+                  color: '#ef4444',
                   fontSize: '11px',
                   cursor: 'pointer',
                   textDecoration: 'underline',
@@ -332,16 +332,16 @@ export function SupportChatWidget() {
                   <div
                     style={{
                       background: isAdmin
-                        ? 'linear-gradient(135deg, #ffe600, #f59e0b)'
+                        ? 'linear-gradient(135deg, #ef4444, #dc2626)'
                         : 'rgba(255, 255, 255, 0.08)',
-                      color: isAdmin ? '#08090c' : '#fff',
+                      color: '#ffffff',
                       padding: '10px 14px',
                       borderRadius: isAdmin ? '16px 16px 16px 4px' : '16px 16px 4px 16px',
                       fontSize: '13px',
                       fontWeight: isAdmin ? 600 : 400,
                       lineHeight: '1.5',
-                      boxShadow: isAdmin ? '0 4px 14px rgba(245, 158, 11, 0.35)' : 'none',
-                      border: isAdmin ? 'none' : '1px solid rgba(212, 175, 55, 0.2)',
+                      boxShadow: isAdmin ? '0 4px 14px rgba(220, 38, 38, 0.35)' : 'none',
+                      border: isAdmin ? 'none' : '1px solid rgba(148, 163, 184, 0.2)',
                       wordBreak: 'break-word',
                     }}
                   >
@@ -368,7 +368,7 @@ export function SupportChatWidget() {
             onSubmit={handleSendMessage}
             style={{
               padding: '12px 14px',
-              borderTop: '1px solid rgba(212, 175, 55, 0.2)',
+              borderTop: '1px solid rgba(220, 38, 38, 0.2)',
               background: '#090a0f',
               display: 'flex',
               gap: '8px',
@@ -384,7 +384,7 @@ export function SupportChatWidget() {
               style={{
                 flex: 1,
                 background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(212, 175, 55, 0.2)',
+                border: '1px solid rgba(148, 163, 184, 0.25)',
                 color: '#fff',
                 borderRadius: '12px',
                 padding: '10px 14px',
@@ -397,9 +397,9 @@ export function SupportChatWidget() {
               disabled={!phone || !messageText.trim() || isSending}
               style={{
                 background: (!phone || !messageText.trim() || isSending)
-                  ? 'rgba(212, 175, 55, 0.25)'
-                  : 'linear-gradient(135deg, #ffe600, #f59e0b)',
-                color: '#08090c',
+                  ? 'rgba(220, 38, 38, 0.25)'
+                  : 'linear-gradient(135deg, #ef4444, #dc2626)',
+                color: '#ffffff',
                 border: 'none',
                 borderRadius: '12px',
                 width: '42px',
@@ -409,7 +409,7 @@ export function SupportChatWidget() {
                 justifyContent: 'center',
                 cursor: (!phone || !messageText.trim() || isSending) ? 'not-allowed' : 'pointer',
                 fontSize: '16px',
-                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                boxShadow: '0 4px 12px rgba(220, 38, 38, 0.35)',
                 flexShrink: 0,
               }}
             >

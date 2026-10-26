@@ -212,10 +212,10 @@ export function AdminDashboard({
         </div>
         <div
           className="stat-item-box"
-          style={{ background: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.3)' }}
+          style={{ background: 'rgba(220, 38, 38, 0.1)', borderColor: 'rgba(220, 38, 38, 0.3)' }}
         >
           <div className="stat-icon">💰</div>
-          <div className="stat-value" style={{ color: '#fbbf24' }}>{formatPrice(totalRevenue)}</div>
+          <div className="stat-value" style={{ color: '#ef4444' }}>{formatPrice(totalRevenue)}</div>
           <div className="stat-label">{t('adminTotalRevenue')}</div>
         </div>
       </div>
@@ -309,7 +309,7 @@ export function AdminDashboard({
                   {formatPrice(account.price)}
                 </td>
 
-                <td style={{ padding: '14px 10px', fontWeight: 700, color: '#f59e0b' }}>
+                <td style={{ padding: '14px 10px', fontWeight: 700, color: '#f1f5f9' }}>
                   🪙 {account.coins}
                 </td>
 

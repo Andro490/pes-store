@@ -169,7 +169,7 @@ export function PurchaseModal({
                       fontFamily: 'monospace',
                       fontSize: '13px',
                       background: 'rgba(0,0,0,0.4)',
-                      color: '#fbbf24',
+                      color: '#f1f5f9',
                       padding: '8px 12px',
                     }}
                   />

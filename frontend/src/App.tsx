@@ -31,7 +31,9 @@ import type { DeliveredAccount } from './types';
 type AppView = 'store' | 'admin';
 
 function getInitialView(): AppView {
-  return window.location.pathname === '/admin' || window.location.hash === '#admin'
+  const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
+  const hash = window.location.hash.toLowerCase();
+  return path === '/admfoad' || hash === '#admfoad'
     ? 'admin'
     : 'store';
 }
@@ -47,7 +49,7 @@ export default function App() {
 
   const navigateTo = (view: AppView) => {
     setCurrentView(view);
-    window.history.pushState(null, '', view === 'admin' ? '/admin' : '/');
+    window.history.pushState(null, '', view === 'admin' ? '/admfoad' : '/');
   };
 
   useEffect(() => {
@@ -60,6 +62,7 @@ export default function App() {
   const {
     isAdminLoggedIn, adminUser,
     adminUsername, adminPassword, adminAuthLoading, adminAuthError,
+    isLocked, lockRemainingSeconds, remainingAttempts,
     setAdminUsername, setAdminPassword,
     checkAdminAuth, handleAdminLogin, handleAdminLogout,
   } = useAdminAuth(() => navigateTo('store'));
@@ -272,6 +275,9 @@ export default function App() {
           password={adminPassword}
           loading={adminAuthLoading}
           error={adminAuthError}
+          isLocked={isLocked}
+          lockRemainingSeconds={lockRemainingSeconds}
+          remainingAttempts={remainingAttempts}
           onUsernameChange={setAdminUsername}
           onPasswordChange={setAdminPassword}
           onSubmit={handleAdminLogin}

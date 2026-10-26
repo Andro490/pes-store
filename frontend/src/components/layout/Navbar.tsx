@@ -39,11 +39,11 @@ export function Navbar({
           <div className="logo-icon-box">
             <div className="logo-icon-inner">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="#ffd700" strokeWidth="1.5"/>
-                <path d="M12 2C12 2 8 8 8 12s4 10 4 10" stroke="#ffd700" strokeWidth="1.5"/>
-                <path d="M12 2C12 2 16 8 16 12s-4 10-4 10" stroke="#ffd700" strokeWidth="1.5"/>
-                <path d="M2 12h20" stroke="#ffd700" strokeWidth="1.5"/>
-                <path d="M4.93 7h14.14M4.93 17h14.14" stroke="#ffd700" strokeWidth="1" opacity="0.6"/>
+                <circle cx="12" cy="12" r="10" stroke="#ffffff" strokeWidth="1.5"/>
+                <path d="M12 2C12 2 8 8 8 12s4 10 4 10" stroke="#ffffff" strokeWidth="1.5"/>
+                <path d="M12 2C12 2 16 8 16 12s-4 10-4 10" stroke="#ffffff" strokeWidth="1.5"/>
+                <path d="M2 12h20" stroke="#ffffff" strokeWidth="1.5"/>
+                <path d="M4.93 7h14.14M4.93 17h14.14" stroke="#ffffff" strokeWidth="1" opacity="0.75"/>
               </svg>
             </div>
           </div>

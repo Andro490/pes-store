@@ -3,6 +3,16 @@ import type { PesAccount } from '../types';
 // API Base URL - uses Vite proxy in dev, direct URL in prod
 const API_BASE = '/api';
 
+// ─── Persistent Device ID ─────────────────────────────────────────────────────
+function getDeviceId(): string {
+  let deviceId = localStorage.getItem('pes_device_id');
+  if (!deviceId) {
+    deviceId = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem('pes_device_id', deviceId);
+  }
+  return deviceId;
+}
+
 // Generic fetch wrapper
 const request = async <T>(
   endpoint: string,
@@ -12,6 +22,7 @@ const request = async <T>(
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    'x-device-id': getDeviceId(),
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
@@ -22,8 +33,14 @@ const request = async <T>(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || 'Request failed');
+    const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+    const err: any = new Error(errorData.message || 'Request failed');
+    err.status = response.status;
+    err.isLocked = errorData.isLocked;
+    err.lockUntil = errorData.lockUntil;
+    err.remainingSeconds = errorData.remainingSeconds;
+    err.remainingAttempts = errorData.remainingAttempts;
+    throw err;
   }
 
   return response.json();
@@ -45,6 +62,9 @@ export const authApi = {
 
   adminVerify: () =>
     request<{ success: boolean; message: string; data: any }>('/auth/admin-verify'),
+
+  getAdminLockStatus: () =>
+    request<{ success: boolean; data: { isLocked: boolean; lockUntil: number; remainingSeconds: number; remainingMinutes: number; attempts: number } }>('/auth/admin-status'),
 
   getMe: () => request('/auth/me'),
 };
