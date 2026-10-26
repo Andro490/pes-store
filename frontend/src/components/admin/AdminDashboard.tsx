@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { AdminSupportChat } from './AdminSupportChat';
 import type { AdminUser } from '../../hooks/useAdminAuth';
 import type { PesAccount } from '../../types';
 
@@ -30,6 +32,7 @@ export function AdminDashboard({
   onDeleteAccount,
 }: AdminDashboardProps) {
   const { t, isRTL, formatPrice } = useLanguage();
+  const [activeTab, setActiveTab] = useState<'accounts' | 'support'>('accounts');
 
   return (
     <main className="store-section" style={{ paddingTop: '30px' }}>
@@ -111,7 +114,73 @@ export function AdminDashboard({
         </div>
       </div>
 
-      {/* Stats Bar */}
+      {/* Navigation Tabs (المتجر vs الدعم الفني) */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '24px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          paddingBottom: '12px',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setActiveTab('accounts')}
+          style={{
+            padding: '10px 22px',
+            borderRadius: '12px',
+            background: activeTab === 'accounts'
+              ? 'linear-gradient(135deg, #0ea5e9, #0284c7)'
+              : 'rgba(255, 255, 255, 0.05)',
+            color: '#fff',
+            border: activeTab === 'accounts' ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
+            fontWeight: 800,
+            fontSize: '14px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.2s',
+          }}
+        >
+          <span>📦</span>
+          <span>إدارة المتجر</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('support')}
+          style={{
+            padding: '10px 24px',
+            borderRadius: '12px',
+            background: activeTab === 'support'
+              ? 'linear-gradient(135deg, #ec4899, #be185d)'
+              : 'rgba(236, 72, 153, 0.1)',
+            color: '#fff',
+            border: activeTab === 'support'
+              ? 'none'
+              : '1px solid rgba(236, 72, 153, 0.3)',
+            fontWeight: 800,
+            fontSize: '14px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: activeTab === 'support' ? '0 4px 16px rgba(236, 72, 153, 0.4)' : 'none',
+            transition: 'all 0.2s',
+          }}
+        >
+          <span>💬</span>
+          <span>الدعم الفني</span>
+        </button>
+      </div>
+
+      {activeTab === 'support' ? (
+        <AdminSupportChat />
+      ) : (
+        <>
+          {/* Stats Bar */}
       <div
         style={{
           display: 'grid',
@@ -188,7 +257,6 @@ export function AdminDashboard({
               <th style={{ padding: '12px 10px' }}>{t('adminThAccount')}</th>
               <th style={{ padding: '12px 10px' }}>{t('adminThPlatform')}</th>
               <th style={{ padding: '12px 10px' }}>{t('adminThPrice')}</th>
-              <th style={{ padding: '12px 10px' }}>{t('adminThStrength')}</th>
               <th style={{ padding: '12px 10px' }}>{t('adminThCoins')}</th>
               <th style={{ padding: '12px 10px' }}>المخزون التلقائي</th>
               <th style={{ padding: '12px 10px' }}>{t('adminThStatus')}</th>
@@ -239,10 +307,6 @@ export function AdminDashboard({
 
                 <td style={{ padding: '14px 10px', fontWeight: 900, color: 'var(--accent-emerald)', fontFamily: 'Outfit, sans-serif' }}>
                   {formatPrice(account.price)}
-                </td>
-
-                <td style={{ padding: '14px 10px', fontWeight: 700, color: '#fbbf24' }}>
-                  ⚡ {account.teamStrength}
                 </td>
 
                 <td style={{ padding: '14px 10px', fontWeight: 700, color: '#f59e0b' }}>
@@ -355,6 +419,8 @@ export function AdminDashboard({
           </tbody>
         </table>
       </div>
+        </>
+      )}
     </main>
   );
 }

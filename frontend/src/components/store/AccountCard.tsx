@@ -54,11 +54,7 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
           </span>
         </div>
 
-        {/* Team Strength overlay */}
-        <div className="card-strength-overlay">
-          <span className="strength-label">⚡ {t('teamStrength')}</span>
-          <span className="strength-num">{account.teamStrength}</span>
-        </div>
+
       </div>
 
       {/* Content */}

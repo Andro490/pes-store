@@ -22,6 +22,7 @@ import { DeviceModal } from './components/modals/DeviceModal';
 import { AccountDetailModal } from './components/modals/AccountDetailModal';
 import { PurchaseModal } from './components/modals/PurchaseModal';
 import { AccountFormModal } from './components/modals/AccountFormModal';
+import { SupportChatWidget } from './components/support/SupportChatWidget';
 
 // ─── Services & Types ──────────────────────────────────────────────
 import { paymobApi } from './services/api';
@@ -388,6 +389,9 @@ export default function App() {
           onClose={() => setIsAccountModalOpen(false)}
         />
       )}
+
+      {/* ── Support Floating Chat Widget ── */}
+      <SupportChatWidget />
 
       {/* ── Footer ── */}
       <Footer

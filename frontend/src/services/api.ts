@@ -137,4 +137,49 @@ export const paymobApi = {
   },
 };
 
+// ─── Support Chat API ────────────────────────────────────────────────────────
+export interface SupportMessageItem {
+  id: string;
+  phone: string;
+  sender: 'user' | 'admin';
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface SupportConversationItem {
+  phone: string;
+  lastMessage: string;
+  lastSender: string;
+  lastTime: string;
+  unreadCount: number;
+  totalMessages: number;
+}
+
+export const supportApi = {
+  sendMessage: (phone: string, message: string) =>
+    request<{ success: boolean; data: SupportMessageItem }>('/support/message', {
+      method: 'POST',
+      body: JSON.stringify({ phone, message }),
+    }),
+
+  getMessages: (phone: string) =>
+    request<{ success: boolean; data: SupportMessageItem[] }>(`/support/messages/${encodeURIComponent(phone)}`),
+
+  getConversations: () =>
+    request<{ success: boolean; data: SupportConversationItem[] }>('/support/conversations'),
+
+  sendReply: (phone: string, message: string) =>
+    request<{ success: boolean; data: SupportMessageItem }>('/support/reply', {
+      method: 'POST',
+      body: JSON.stringify({ phone, message }),
+    }),
+
+  deleteConversation: (phone: string) =>
+    request<{ success: boolean; message: string }>(`/support/conversations/${encodeURIComponent(phone)}`, {
+      method: 'DELETE',
+    }),
+};
+
+
 

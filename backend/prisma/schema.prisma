@@ -59,3 +59,15 @@ model SoldAccount {
 
   @@map("sold_accounts")
 }
+
+model SupportMessage {
+  id        String   @id @default(uuid())
+  phone     String
+  sender    String   // "user" | "admin"
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("support_messages")
+}
+

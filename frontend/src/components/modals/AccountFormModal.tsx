@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { AccountFormData } from '../../hooks/useAccounts';
 import type { PesAccount } from '../../types';
@@ -20,8 +20,44 @@ export function AccountFormModal({
 }: AccountFormModalProps) {
   const { t, isRTL } = useLanguage();
 
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const field = (key: keyof AccountFormData) =>
     (value: any) => onChange((prev) => ({ ...prev, [key]: value }));
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploadingImage(true);
+      setUploadError(null);
+
+      const body = new FormData();
+      body.append('image', file);
+
+      const res = await fetch('https://api.imgbb.com/1/upload?key=878a3e7d1975c224f0cfc02c0bd29299', {
+        method: 'POST',
+        body,
+      });
+
+      const data = await res.json();
+      if (data.success && data.data?.url) {
+        field('imageUrl')(data.data.url);
+      } else {
+        setUploadError(data.error?.message || 'فشل رفع الصورة على ImgBB');
+      }
+    } catch (err: any) {
+      setUploadError(err.message || 'حدث خطأ أثناء رفع الصورة');
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const parsedStockCount = useMemo(() => {
     if (!formData.bulkAccounts) return 0;
@@ -93,29 +129,17 @@ export function AccountFormModal({
             </FormField>
           </div>
 
-          {/* Strength + Coins */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <FormField label={t('formStrengthLabel')}>
-              <input
-                type="number"
-                placeholder="3185"
-                value={formData.teamStrength}
-                onChange={(e) => field('teamStrength')(Number(e.target.value))}
-                className="search-input-field"
-                style={{ padding: '10px 14px' }}
-              />
-            </FormField>
-            <FormField label={t('formCoinsLabel')}>
-              <input
-                type="number"
-                placeholder="1500"
-                value={formData.coins}
-                onChange={(e) => field('coins')(Number(e.target.value))}
-                className="search-input-field"
-                style={{ padding: '10px 14px' }}
-              />
-            </FormField>
-          </div>
+          {/* Coins */}
+          <FormField label={t('formCoinsLabel')}>
+            <input
+              type="number"
+              placeholder="1500"
+              value={formData.coins}
+              onChange={(e) => field('coins')(Number(e.target.value))}
+              className="search-input-field"
+              style={{ padding: '10px 14px' }}
+            />
+          </FormField>
 
           {/* Epic + Players */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
@@ -143,14 +167,83 @@ export function AccountFormModal({
           {/* Image + Badge */}
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
             <FormField label={t('formImageLabel')}>
+              {/* Hidden file input */}
               <input
-                type="url"
-                value={formData.imageUrl}
-                onChange={(e) => field('imageUrl')(e.target.value)}
-                className="search-input-field"
-                style={{ padding: '10px 14px' }}
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleImageUpload}
               />
+
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="url"
+                  placeholder="https://i.ibb.co/..."
+                  value={formData.imageUrl}
+                  onChange={(e) => field('imageUrl')(e.target.value)}
+                  className="search-input-field"
+                  style={{ padding: '10px 14px', flex: 1 }}
+                />
+
+                <button
+                  type="button"
+                  disabled={isUploadingImage}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    background: isUploadingImage
+                      ? 'rgba(56, 189, 248, 0.2)'
+                      : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '10px 14px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    cursor: isUploadingImage ? 'not-allowed' : 'pointer',
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span>{isUploadingImage ? '⏳' : '📤'}</span>
+                  <span>{isUploadingImage ? 'جاري الرفع...' : 'رفع صورة'}</span>
+                </button>
+              </div>
+
+              {uploadError && (
+                <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '4px' }}>
+                  ⚠️ {uploadError}
+                </div>
+              )}
+
+              {/* Preview Thumbnail if image is set */}
+              {formData.imageUrl && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                  <img
+                    src={formData.imageUrl}
+                    alt="Preview"
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '8px',
+                      objectFit: 'cover',
+                      border: '1px solid #38bdf8',
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
+                    ✓ تم اختيار الصورة بنجاح
+                  </span>
+                </div>
+              )}
             </FormField>
+
             <FormField label={t('formBadgeLabel')}>
               <input
                 type="text"

@@ -1,0 +1,165 @@
+import { Router, Request, Response } from 'express';
+import { prisma } from '../services/prisma.service';
+import { authenticate, authorizeRoles } from '../middleware/auth.middleware';
+
+const router = Router();
+
+// 1. POST /api/support/message (User sends a message with mandatory phone)
+router.post('/message', async (req: Request, res: Response) => {
+  try {
+    const { phone, message } = req.body;
+
+    if (!phone || !String(phone).trim()) {
+      res.status(400).json({ success: false, message: 'رقم الموبايل مطلوب قبل إرسال الرسالة' });
+      return;
+    }
+
+    if (!message || !String(message).trim()) {
+      res.status(400).json({ success: false, message: 'محتوى الرسالة مطلوب' });
+      return;
+    }
+
+    const cleanPhone = String(phone).trim();
+    const cleanMessage = String(message).trim();
+
+    const created = await (prisma as any).supportMessage.create({
+      data: {
+        phone: cleanPhone,
+        sender: 'user',
+        message: cleanMessage,
+        isRead: false,
+      },
+    });
+
+    res.json({ success: true, data: created });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل إرسال الرسالة', error: error.message });
+  }
+});
+
+// 2. GET /api/support/messages/:phone (User fetches their chat messages)
+router.get('/messages/:phone', async (req: Request, res: Response) => {
+  try {
+    const { phone } = req.params;
+
+    if (!phone) {
+      res.status(400).json({ success: false, message: 'رقم الموبايل مطلوب' });
+      return;
+    }
+
+    const cleanPhone = String(phone).trim();
+
+    const messages = await (prisma as any).supportMessage.findMany({
+      where: { phone: cleanPhone },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.json({ success: true, data: messages });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل جلب الرسائل', error: error.message });
+  }
+});
+
+// 3. GET /api/support/conversations (Admin gets all conversations grouped by phone)
+router.get('/conversations', authenticate, authorizeRoles('admin'), async (_req: Request, res: Response) => {
+  try {
+    const messages = await (prisma as any).supportMessage.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Group by phone
+    const conversationsMap = new Map<string, {
+      phone: string;
+      lastMessage: string;
+      lastSender: string;
+      lastTime: Date;
+      unreadCount: number;
+      totalMessages: number;
+    }>();
+
+    for (const msg of messages) {
+      if (!conversationsMap.has(msg.phone)) {
+        conversationsMap.set(msg.phone, {
+          phone: msg.phone,
+          lastMessage: msg.message,
+          lastSender: msg.sender,
+          lastTime: msg.createdAt,
+          unreadCount: msg.sender === 'user' && !msg.isRead ? 1 : 0,
+          totalMessages: 1,
+        });
+      } else {
+        const conv = conversationsMap.get(msg.phone)!;
+        conv.totalMessages += 1;
+        if (msg.sender === 'user' && !msg.isRead) {
+          conv.unreadCount += 1;
+        }
+      }
+    }
+
+    const conversations = Array.from(conversationsMap.values());
+    res.json({ success: true, data: conversations });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل جلب المحادثات', error: error.message });
+  }
+});
+
+// 4. POST /api/support/reply (Admin replies to a conversation)
+router.post('/reply', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
+  try {
+    const { phone, message } = req.body;
+
+    if (!phone || !String(phone).trim()) {
+      res.status(400).json({ success: false, message: 'رقم الموبايل مطلوب' });
+      return;
+    }
+
+    if (!message || !String(message).trim()) {
+      res.status(400).json({ success: false, message: 'الرد مطلوب' });
+      return;
+    }
+
+    const cleanPhone = String(phone).trim();
+    const cleanMessage = String(message).trim();
+
+    // Mark previous user messages as read
+    await (prisma as any).supportMessage.updateMany({
+      where: { phone: cleanPhone, sender: 'user', isRead: false },
+      data: { isRead: true },
+    });
+
+    // Create admin message
+    const replyMsg = await (prisma as any).supportMessage.create({
+      data: {
+        phone: cleanPhone,
+        sender: 'admin',
+        message: cleanMessage,
+        isRead: true,
+      },
+    });
+
+    res.json({ success: true, data: replyMsg });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل إرسال الرد', error: error.message });
+  }
+});
+
+// 5. DELETE /api/support/conversations/:phone (Admin deletes a conversation)
+router.delete('/conversations/:phone', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
+  try {
+    const { phone } = req.params;
+    if (!phone) {
+      res.status(400).json({ success: false, message: 'رقم الموبايل مطلوب' });
+      return;
+    }
+
+    await (prisma as any).supportMessage.deleteMany({
+      where: { phone: String(phone).trim() },
+    });
+
+    res.json({ success: true, message: 'تم حذف المحادثة بنجاح' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل حذف المحادثة', error: error.message });
+  }
+});
+
+export default router;

@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import pesRoutes from './routes/pesAccounts.routes';
 import paymobRoutes from './routes/paymob.routes';
+import supportRoutes from './routes/support.routes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,6 +29,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/pes-accounts', pesRoutes);
 app.use('/api/paymob', paymobRoutes);
+app.use('/api/support', supportRoutes);
 
 // ─── Health Check ────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
