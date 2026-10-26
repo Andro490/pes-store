@@ -198,6 +198,7 @@ body {
   color: #f87171;
   border: 1px solid rgba(220, 38, 38, 0.35);
   -webkit-text-fill-color: initial;
+  white-space: nowrap;
 }
 
 .logo-subtitle {
@@ -1711,6 +1712,15 @@ body {
 @media (max-width: 768px) {
   .header-nav {
     display: none;
+  }
+  .btn-header-buy {
+    display: none !important;
+  }
+  .hero-card-col {
+    display: none !important;
+  }
+  .hero-main-grid {
+    grid-template-columns: 1fr !important;
   }
   .stats-grid-wrapper {
     grid-template-columns: repeat(2, 1fr);
