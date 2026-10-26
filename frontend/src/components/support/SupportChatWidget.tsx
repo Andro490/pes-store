@@ -9,10 +9,33 @@ export function SupportChatWidget() {
   const [messageText, setMessageText] = useState('');
   const [messages, setMessages] = useState<SupportMessageItem[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const [unreadAdminCount, setUnreadAdminCount] = useState<number>(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Gentle audio chime for new messages
+  const playNotificationSound = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const audioCtx = new AudioCtx();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.35);
+    } catch {}
+  };
 
   useEffect(() => {
     if (isOpen) {
+      localStorage.setItem('pes_support_last_seen', new Date().toISOString());
+      setUnreadAdminCount(0);
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [isOpen]);
@@ -27,6 +50,23 @@ export function SupportChatWidget() {
         const res = await supportApi.getMessages(phone);
         if (res.success && isMounted) {
           setMessages(res.data);
+
+          // Calculate unread admin messages when widget is closed
+          if (!isOpen) {
+            const lastSeen = localStorage.getItem('pes_support_last_seen') || '1970-01-01T00:00:00Z';
+            const unread = res.data.filter(
+              (m) => m.sender === 'admin' && m.createdAt > lastSeen
+            ).length;
+            setUnreadAdminCount((prev) => {
+              if (unread > prev) {
+                playNotificationSound();
+              }
+              return unread;
+            });
+          } else {
+            localStorage.setItem('pes_support_last_seen', new Date().toISOString());
+            setUnreadAdminCount(0);
+          }
         }
       } catch {
         // silent fail on background poll
@@ -119,6 +159,30 @@ export function SupportChatWidget() {
       >
         <span style={{ fontSize: '18px' }}>💬</span>
         <span>الدعم الفني</span>
+        {unreadAdminCount > 0 && (
+          <span
+            style={{
+              position: 'absolute',
+              top: '-6px',
+              right: '-6px',
+              background: '#22c55e',
+              color: '#030712',
+              borderRadius: '50%',
+              minWidth: '22px',
+              height: '22px',
+              padding: '0 6px',
+              fontSize: '12px',
+              fontWeight: 900,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 16px rgba(34, 197, 94, 0.9), 0 4px 10px rgba(0,0,0,0.5)',
+              border: '2px solid #ffffff',
+            }}
+          >
+            {unreadAdminCount}
+          </span>
+        )}
       </button>
 
       {/* Chat Window Modal */}

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { AdminSupportChat } from './AdminSupportChat';
+import { supportApi } from '../../services/api';
 import type { AdminUser } from '../../hooks/useAdminAuth';
 import type { PesAccount } from '../../types';
 
@@ -33,6 +34,22 @@ export function AdminDashboard({
 }: AdminDashboardProps) {
   const { t, isRTL, formatPrice } = useLanguage();
   const [activeTab, setActiveTab] = useState<'accounts' | 'support'>('accounts');
+  const [unreadSupportCount, setUnreadSupportCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await supportApi.getConversations();
+        if (res.success && Array.isArray(res.data)) {
+          const total = res.data.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
+          setUnreadSupportCount(total);
+        }
+      } catch {}
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 4500);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <main className="store-section" style={{ paddingTop: '30px' }}>
@@ -152,6 +169,7 @@ export function AdminDashboard({
           type="button"
           onClick={() => setActiveTab('support')}
           style={{
+            position: 'relative',
             padding: '10px 24px',
             borderRadius: '12px',
             background: activeTab === 'support'
@@ -173,6 +191,30 @@ export function AdminDashboard({
         >
           <span>💬</span>
           <span>الدعم الفني</span>
+          {unreadSupportCount > 0 && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '-6px',
+                right: '-6px',
+                background: '#ef4444',
+                color: '#fff',
+                borderRadius: '50%',
+                minWidth: '20px',
+                height: '20px',
+                padding: '0 5px',
+                fontSize: '11px',
+                fontWeight: 900,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 12px rgba(239, 68, 68, 0.9)',
+                border: '2px solid #fff',
+              }}
+            >
+              {unreadSupportCount}
+            </span>
+          )}
         </button>
       </div>
 
