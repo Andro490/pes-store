@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 interface LegalPageProps {
   type: 'terms' | 'privacy' | 'refund' | 'pricing';
@@ -165,7 +165,7 @@ function RefundContent() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-white">1. ضمان التسليم الفوري ومطابقة المواصفات (Delivery Guarantee)</h2>
         <p>
-          نحن نضمن صحة وسلامة ومطابقة جميع الحسابات الرقمية للمواصفات المعروضة في المتجر (قوة الفريق، عدد الكوينز، اللاعبين الأساطير) بنسبة 100% وقت التسليم.
+          نحن نضمن صحة وسلامة ومطابقة جميع الحسابات الرقمية للمواصفات المعروضة في المتجر (قوة الفريق، اللاعبين الأساطير) بنسبة 100% وقت التسليم.
         </p>
       </section>
 
@@ -236,7 +236,7 @@ function PricingContent({ onBackToStore }: { onBackToStore: () => void }) {
           <div>
             <div className="text-xs uppercase font-bold text-cyan-300 tracking-wider">Pro Tier</div>
             <h3 className="text-xl font-bold text-white mt-1">حسابات ديفيجن 1 أسطورية</h3>
-            <p className="text-xs text-gray-400 mt-2">تشكيلات بطاقات إبيك وشو تايم وكوينز عالية.</p>
+            <p className="text-xs text-gray-400 mt-2">تشكيلات بطاقات إبيك وشو تايم وتصنيف عالي.</p>
             <div className="my-6">
               <span className="text-3xl font-extrabold text-cyan-300">490 EGP</span>
               <span className="text-xs text-gray-400 block mt-1">≈ $9.80 USD</span>
@@ -244,7 +244,7 @@ function PricingContent({ onBackToStore }: { onBackToStore: () => void }) {
             <ul className="space-y-2 text-xs text-gray-200">
               <li>⚡ تسليم فوري وتلقائي عبر Paddle</li>
               <li>🛡️ لاعبين نيتف أساطير (شيفشينكو، باتستوتا)</li>
-              <li>⚽ كوينز جاهزة لفتح الباكات</li>
+              <li>⚽ بطاقات نجوم متطورة جاهزة</li>
               <li>💬 دعم فني مخصص مباشر</li>
             </ul>
           </div>
@@ -293,4 +293,5 @@ function PricingContent({ onBackToStore }: { onBackToStore: () => void }) {
     </div>
   );
 }
+
 

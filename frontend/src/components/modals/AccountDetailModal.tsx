@@ -1,4 +1,4 @@
-import { useLanguage } from '../../i18n/LanguageContext';
+﻿import { useLanguage } from '../../i18n/LanguageContext';
 import type { PesAccount } from '../../types';
 
 interface AccountDetailModalProps {
@@ -116,3 +116,4 @@ export function AccountDetailModal({ account, onClose, onOrder }: AccountDetailM
     </div>
   );
 }
+

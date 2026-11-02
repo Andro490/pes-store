@@ -1,4 +1,4 @@
-export type Language = 'ar' | 'en';
+﻿export type Language = 'ar' | 'en';
 
 export const translations = {
   ar: {
@@ -17,9 +17,9 @@ export const translations = {
     // Hero Section
     heroPill: 'تحديث فوري لأسعار حسابات eFootball 2026',
     heroTitlePart1: 'متجر حسابات',
-    heroTitlePart2: 'كوينز بيس',
+    heroTitlePart2: 'كرة القدم الإلكترونية',
     heroTitlePart3: 'الأقوى',
-    heroDesc: 'امتلك أقوى التشكيلات بأسعار خيالية. حسابات كوينز أندرويد و iOS موثقة مع كونامي ID وتغيير كامل للبيانات فور الشراء مع ضمان شامل.',
+    heroDesc: 'امتلك أقوى التشكيلات بأسعار خيالية. حزم وتشكيلات أندرويد و iOS موثقة مع كونامي ID وتغيير كامل للبيانات فور الشراء مع ضمان شامل.',
     heroBuyNow: 'شراء الآن',
     heroSelectDevice: 'اختر جهازك',
     heroBrowseAccounts: 'استعراض كافة الحسابات',
@@ -59,10 +59,10 @@ export const translations = {
     teamStrength: 'القوة:',
     priceLabel: 'السعر المطلوب:',
     currency: 'جنيه',
-    coinsBalance: 'رصيد الكوينز',
+    coinsBalance: 'تقييم الفريق (Score)',
     epicLegends: 'أساطير الإبيك:',
     playerUnit: 'لاعب',
-    gpBalance: 'رصيد GP:',
+    gpBalance: 'نقاط الخبرة:',
     squadHighlights: 'أبرز نجوم التشكيلة:',
     previewDetails: 'معاينة وتفاصيل',
     orderAccount: 'طلب الحساب',
@@ -70,7 +70,7 @@ export const translations = {
 
     // Device Modal
     deviceModalTitle: 'ما هو نظام هاتفك؟',
-    deviceModalSubtext: 'اختر نظام تشغيل جهازك لعرض الحسابات المتوافقة معك بدقة وضمان نقل الكوينز والتشكيلة بأمان 100%.',
+    deviceModalSubtext: 'اختر نظام تشغيل جهازك لعرض الحسابات المتوافقة معك بدقة وضمان نقل بيانات التشكيلة بأمان 100%.',
     androidTitle: 'Android (أندرويد)',
     androidSub: 'سامسونج، شاومي، أوبو، ريلمي...',
     androidAction: 'عرض حسابات أندرويد',
@@ -81,8 +81,8 @@ export const translations = {
 
     // Account Details Modal
     modalStrength: 'قوة التشكيلة',
-    modalCoins: 'رصيد الكوينز',
-    modalGp: 'رصيد GP',
+    modalCoins: 'تقييم الفريق (Score)',
+    modalGp: 'نقاط الخبرة',
     modalEpic: 'لاعبي الإبيك',
     modalExtraDetails: 'تفاصيل إضافية:',
     modalSquadStars: 'أبرز نجوم التشكيلة:',
@@ -200,7 +200,7 @@ export const translations = {
     // Hero Section
     heroPill: 'Live Price Updates for eFootball 2026 Accounts',
     heroTitlePart1: 'The Premier',
-    heroTitlePart2: 'PES Coins & Accounts',
+    heroTitlePart2: 'Football Rosters & Packages',
     heroTitlePart3: 'Store',
     heroDesc: 'Own unbeatable dream squads at incredible prices. Verified Android & iOS accounts with full Konami ID ownership transfer immediately upon purchase with full guarantee.',
     heroBuyNow: 'Buy Now',
@@ -242,10 +242,10 @@ export const translations = {
     teamStrength: 'Strength:',
     priceLabel: 'Price:',
     currency: 'EGP',
-    coinsBalance: 'Coins Balance',
+    coinsBalance: 'Squad Rating',
     epicLegends: 'Epic Legends:',
     playerUnit: 'Players',
-    gpBalance: 'GP Balance:',
+    gpBalance: 'Club XP:',
     squadHighlights: 'Key Squad Stars:',
     previewDetails: 'Preview & Details',
     orderAccount: 'Order Account',
@@ -253,7 +253,7 @@ export const translations = {
 
     // Device Modal
     deviceModalTitle: 'What is your phone OS?',
-    deviceModalSubtext: 'Select your mobile platform to show compatible accounts and guarantee 100% safe coin and squad data transfer.',
+    deviceModalSubtext: 'Select your mobile platform to show compatible accounts and guarantee 100% safe squad profile transfer.',
     androidTitle: 'Android',
     androidSub: 'Samsung, Xiaomi, Oppo, Realme...',
     androidAction: 'View Android Accounts',
@@ -264,8 +264,8 @@ export const translations = {
 
     // Account Details Modal
     modalStrength: 'Team Strength',
-    modalCoins: 'Coins Balance',
-    modalGp: 'GP Balance',
+    modalCoins: 'Squad Rating',
+    modalGp: 'Club XP',
     modalEpic: 'Epic Players',
     modalExtraDetails: 'Additional Details:',
     modalSquadStars: 'Key Squad Stars:',
@@ -369,3 +369,4 @@ export const translations = {
 };
 
 export type TranslationKey = keyof typeof translations.ar;
+

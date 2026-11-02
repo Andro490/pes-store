@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 interface HeroSectionProps {
@@ -317,10 +317,10 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
                 <div>
                   <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
                     <img src="/efootball-coin.png" alt="coin" style={{ width: '12px', height: '12px', objectFit: 'contain' }} />
-                    رصيد الكوينز
+                    ⭐ كفاءة التشكيلة
                   </div>
                   <div style={{ fontSize: '14px', fontWeight: 900, color: '#fde68a', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    6,500 كوينز
+                    3,150 أقصى تقييم
                     <img src="/efootball-coin.png" alt="eFootball Coin" style={{ width: '22px', height: '22px', objectFit: 'contain', filter: 'drop-shadow(0 0 5px rgba(255,215,0,0.7))', animation: 'coinBounce 1.8s ease-in-out infinite' }} />
                   </div>
                 </div>
@@ -376,3 +376,4 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
     </section>
   );
 }
+

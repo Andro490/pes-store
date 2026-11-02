@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { PesAccount } from '../../types';
 
@@ -149,3 +149,4 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
     </div>
   );
 }
+
