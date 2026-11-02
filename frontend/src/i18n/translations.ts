@@ -28,7 +28,7 @@ export const translations = {
     statGuaranteedAccounts: 'حساب معروض ومضمون',
     statCustomerRating: 'تقييم العملاء',
     statInstantDelivery: 'تسليم فوري ومباشر',
-    statThreeMins: '3 دقائق',
+    statThreeMins: '3 ثواني ',
     statPaymentMethods: 'Paymob & فيزا & كاش',
     statInstantCheckout: 'دفع إلكتروني فوري',
 
@@ -211,7 +211,7 @@ export const translations = {
     statGuaranteedAccounts: 'Listed & Verified Accounts',
     statCustomerRating: 'Customer Rating',
     statInstantDelivery: 'Instant Delivery',
-    statThreeMins: '3 Minutes',
+    statThreeMins: '3 second',
     statPaymentMethods: 'Paymob, Cards & Wallets',
     statInstantCheckout: 'Instant Checkout',
 
