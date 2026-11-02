@@ -23,19 +23,23 @@ import { AccountDetailModal } from './components/modals/AccountDetailModal';
 import { PurchaseModal } from './components/modals/PurchaseModal';
 import { AccountFormModal } from './components/modals/AccountFormModal';
 import { SupportChatWidget } from './components/support/SupportChatWidget';
+import { LegalPage } from './components/legal/LegalPages';
 
 // ─── Services & Types ──────────────────────────────────────────────
 import { paymobApi, paddleApi } from './services/api';
 import type { DeliveredAccount } from './types';
 
-type AppView = 'store' | 'admin';
+type AppView = 'store' | 'admin' | 'terms' | 'privacy' | 'refund' | 'pricing';
 
 function getInitialView(): AppView {
   const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
   const hash = window.location.hash.toLowerCase();
-  return path === '/admfoad' || hash === '#admfoad'
-    ? 'admin'
-    : 'store';
+  if (path === '/admfoad' || hash === '#admfoad') return 'admin';
+  if (path === '/terms' || hash === '#terms') return 'terms';
+  if (path === '/privacy' || hash === '#privacy') return 'privacy';
+  if (path === '/refund' || path === '/refunds' || hash === '#refund' || hash === '#refunds') return 'refund';
+  if (path === '/pricing' || hash === '#pricing') return 'pricing';
+  return 'store';
 }
 
 export default function App() {
@@ -49,7 +53,9 @@ export default function App() {
 
   const navigateTo = (view: AppView) => {
     setCurrentView(view);
-    window.history.pushState(null, '', view === 'admin' ? '/admfoad' : '/');
+    const path = view === 'admin' ? '/admfoad' : view === 'store' ? '/' : `/${view}`;
+    window.history.pushState(null, '', path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -406,6 +412,11 @@ export default function App() {
         </>
       )}
 
+      {/* ══ LEGAL & PRICING PAGES (Paddle Compliance) ════════════════ */}
+      {(currentView === 'terms' || currentView === 'privacy' || currentView === 'refund' || currentView === 'pricing') && (
+        <LegalPage type={currentView} onBackToStore={() => navigateTo('store')} />
+      )}
+
       {/* ══ MODALS ══════════════════════════════════════════════════ */}
 
       {isDeviceModalOpen && (
@@ -488,6 +499,7 @@ export default function App() {
       <Footer
         isAdminLoggedIn={isAdminLoggedIn}
         onAdminClick={() => navigateTo('admin')}
+        onNavigate={navigateTo}
       />
     </div>
   );

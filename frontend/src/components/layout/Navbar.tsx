@@ -3,9 +3,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 
 interface NavbarProps {
-  currentView: 'store' | 'admin';
+  currentView: string;
   isAdminLoggedIn: boolean;
-  onNavigate: (view: 'store' | 'admin') => void;
+  onNavigate: (view: any) => void;
   onLogout: () => void;
   onBuyClick: () => void;
   onCreateAccount: () => void;
