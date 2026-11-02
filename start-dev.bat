@@ -1,14 +1,15 @@
 @echo off
+chcp 65001 >nul
 title Launching PES Store Local Development
 echo ===================================================
 echo   Starting PES Store Development Servers (Local)
 echo ===================================================
 
 echo [1/2] Starting Backend on http://localhost:5000 ...
-start "PES Store - Backend (Port 5000)" cmd /k "cd /d %~dp0backend && npm run dev"
+start "PES Store - Backend (Port 5000)" cmd /k "chcp 65001 >nul && cd /d "%~dp0backend" && npm run dev"
 
 echo [2/2] Starting Frontend on http://localhost:5173 ...
-start "PES Store - Frontend (Port 5173)" cmd /k "cd /d %~dp0frontend && npm run dev"
+start "PES Store - Frontend (Port 5173)" cmd /k "chcp 65001 >nul && cd /d "%~dp0frontend" && npm run dev"
 
 echo.
 echo ===================================================

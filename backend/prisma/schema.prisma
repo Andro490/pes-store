@@ -72,6 +72,18 @@ model PaymobPayment {
   @@map("paymob_payments")
 }
 
+model PaddlePayment {
+  transactionId  String   @id
+  accountId      String
+  amountCents    Int
+  currency       String   @default("USD")
+  claimTokenHash String
+  status         String   @default("draft")
+  createdAt      DateTime @default(now())
+
+  @@map("paddle_payments")
+}
+
 model SupportMessage {
   id        String   @id @default(uuid())
   phone     String
@@ -81,4 +93,32 @@ model SupportMessage {
   createdAt DateTime @default(now())
 
   @@map("support_messages")
+}
+
+// ─── Paddle Subscription Tables ─────────────────────────────────────────────
+
+model PaddleCustomer {
+  customerId    String   @id              // Paddle customer ID (ctm_...)
+  email         String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subscriptions PaddleSubscription[]
+
+  @@map("paddle_customers")
+}
+
+model PaddleSubscription {
+  subscriptionId        String    @id              // Paddle subscription ID (sub_...)
+  customerId            String
+  customer              PaddleCustomer @relation(fields: [customerId], references: [customerId])
+  status                String                     // active | trialing | canceled | paused | past_due
+  priceId               String
+  productId             String
+  scheduledChangeAction String?                    // cancel | pause | resume
+  scheduledChangeAt     DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("paddle_subscriptions")
 }

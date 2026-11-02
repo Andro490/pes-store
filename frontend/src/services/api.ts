@@ -158,6 +158,44 @@ export const paymobApi = {
   },
 };
 
+// ─── Paddle API ──────────────────────────────────────────────────────────────
+export const paddleApi = {
+  getConfig: async (): Promise<{
+    success: boolean;
+    data: { environment: 'sandbox' | 'production'; clientToken: string; usdRate: number; isConfigured: boolean };
+  }> => {
+    return request('/paddle/config');
+  },
+  initiate: async (params: {
+    accountId: string;
+    customerEmail?: string;
+  }): Promise<{
+    success: boolean;
+    data: {
+      transactionId: string;
+      checkoutUrl: string | null;
+      claimToken: string;
+      amountUsd: number;
+      successUrl: string;
+    };
+  }> => {
+    return request('/paddle/initiate', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+  verifyAndDeliver: async (params: {
+    transactionId: string;
+    accountId: string;
+    claimToken: string;
+  }): Promise<{ success: boolean; message: string; data: { deliveredAccount: any; alreadyDelivered?: boolean } }> => {
+    return request('/paddle/verify-and-deliver', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+};
+
 // ─── Support Chat API ────────────────────────────────────────────────────────
 export interface SupportMessageItem {
   id: string;

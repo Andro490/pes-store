@@ -14,6 +14,9 @@ interface PurchaseModalProps {
   onClose: () => void;
   onPayWithPaymob: () => void;
   onPurchaseSuccess?: () => void;
+  isPayingWithPaddle?: boolean;
+  paddleError?: string | null;
+  onPayWithPaddle?: () => void;
 }
 
 export function PurchaseModal({
@@ -24,6 +27,9 @@ export function PurchaseModal({
   initialDeliveredData,
   onClose,
   onPayWithPaymob,
+  isPayingWithPaddle = false,
+  paddleError,
+  onPayWithPaddle,
 }: PurchaseModalProps) {
   const { t, isRTL, formatPrice } = useLanguage();
 
@@ -428,12 +434,12 @@ export function PurchaseModal({
               <span style={{ fontSize: '18px' }}>⚡</span>
               <div>
                 <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>تسليم فوري ومباشر بعد الدفع:</strong>
-                بمجرد إتمام الدفع عبر Paymob، سيتم سحب الحساب من السيرفر وعرض البريد وكلمة المرور ورابط استلام الكود فوراً على شاشتك.
+                بمجرد إتمام الدفع عبر Paymob أو Paddle، سيتم سحب الحساب من السيرفر وعرض البريد وكلمة المرور ورابط استلام الكود فوراً على شاشتك.
               </div>
             </div>
 
             {/* Error Banner – نفد المخزون أو أي خطأ من السيرفر */}
-            {paymobError && (
+            {(paymobError || paddleError) && (
               <div
                 style={{
                   display: 'flex',
@@ -452,7 +458,7 @@ export function PurchaseModal({
                 <span style={{ fontSize: '20px', flexShrink: 0 }}>🚫</span>
                 <div>
                   <strong style={{ color: '#f87171', display: 'block', marginBottom: '2px' }}>تعذّر إتمام الدفع:</strong>
-                  {paymobError}
+                  {paymobError || paddleError}
                 </div>
               </div>
             )}
@@ -460,30 +466,66 @@ export function PurchaseModal({
             {/* Paymob Primary Button */}
             <button
               onClick={onPayWithPaymob}
-              disabled={isPayingWithPaymob || !account.isAvailable}
+              disabled={isPayingWithPaymob || isPayingWithPaddle || !account.isAvailable}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '10px',
                 width: '100%',
-                padding: '16px',
+                padding: '15px',
                 borderRadius: '14px',
                 background: account.isAvailable
                   ? 'linear-gradient(135deg, #0284c7, #2563eb)'
                   : 'rgba(255,255,255,0.05)',
                 color: account.isAvailable ? '#fff' : '#64748b',
                 fontWeight: '900',
-                fontSize: '15px',
+                fontSize: '14px',
                 border: 'none',
-                cursor: account.isAvailable ? 'pointer' : 'not-allowed',
+                cursor: account.isAvailable && !isPayingWithPaymob && !isPayingWithPaddle ? 'pointer' : 'not-allowed',
                 boxShadow: account.isAvailable ? '0 6px 20px rgba(37, 99, 235, 0.35)' : 'none',
-                marginBottom: '12px',
+                marginBottom: '10px',
+                transition: 'all 0.2s ease',
               }}
             >
               <span style={{ fontSize: '18px' }}>💳</span>
-              <span>{isPayingWithPaymob ? 'جاري توجيهك إلى Paymob...' : 'الدفع وتأكيد الشراء عبر Paymob (فيزا / محافظ)'}</span>
+              <span>{isPayingWithPaymob ? 'جاري توجيهك إلى Paymob...' : 'الدفع وتأكيد الشراء عبر Paymob (فيزا / محافظ مصرية)'}</span>
             </button>
+
+            {/* Paddle Primary Button */}
+            {onPayWithPaddle && (
+              <button
+                onClick={onPayWithPaddle}
+                disabled={isPayingWithPaymob || isPayingWithPaddle || !account.isAvailable}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  width: '100%',
+                  padding: '15px',
+                  borderRadius: '14px',
+                  background: account.isAvailable
+                    ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                    : 'rgba(255,255,255,0.05)',
+                  color: account.isAvailable ? '#fff' : '#64748b',
+                  fontWeight: '900',
+                  fontSize: '14px',
+                  border: 'none',
+                  cursor: account.isAvailable && !isPayingWithPaymob && !isPayingWithPaddle ? 'pointer' : 'not-allowed',
+                  boxShadow: account.isAvailable ? '0 6px 20px rgba(139, 92, 246, 0.35)' : 'none',
+                  marginBottom: '12px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <span style={{ fontSize: '18px' }}>🌐</span>
+                <span>
+                  {isPayingWithPaddle
+                    ? 'جاري فتح بوابة الدفع Paddle...'
+                    : 'الدفع وتأكيد الشراء عبر Paddle (بطاقات دولية / PayPal)'}
+                </span>
+              </button>
+            )}
 
             {/* Paymob response link if available — hidden, redirect is automatic */}
 

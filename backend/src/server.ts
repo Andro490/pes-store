@@ -13,6 +13,7 @@ import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import pesRoutes from './routes/pesAccounts.routes';
 import paymobRoutes from './routes/paymob.routes';
+import paddleRoutes from './routes/paddle.routes';
 import supportRoutes from './routes/support.routes';
 
 const app = express();
@@ -57,15 +58,22 @@ app.use(cors({
   credentials: true,
 }));
 app.use(cookieParser());
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(morgan('dev'));
 
+// Paddle webhook needs RAW body for HMAC verification — must parse before express.json()
+app.use('/api/paddle/webhook', express.raw({ type: '*/*' }));
+// All other routes get JSON parsing
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
 // ─── Routes ──────────────────────────────────────────────────────────────────
+// NOTE: Paddle webhook uses per-route express.raw() middleware (inside paddle.routes.ts)
+// so express.json() above does NOT interfere with webhook signature verification.
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/pes-accounts', pesRoutes);
 app.use('/api/paymob', paymobRoutes);
+app.use('/api/paddle', paddleRoutes);
 app.use('/api/support', supportRoutes);
 
 // ─── Health Check ────────────────────────────────────────────────────────────

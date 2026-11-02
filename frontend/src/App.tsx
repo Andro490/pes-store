@@ -25,7 +25,7 @@ import { AccountFormModal } from './components/modals/AccountFormModal';
 import { SupportChatWidget } from './components/support/SupportChatWidget';
 
 // ─── Services & Types ──────────────────────────────────────────────
-import { paymobApi } from './services/api';
+import { paymobApi, paddleApi } from './services/api';
 import type { DeliveredAccount } from './types';
 
 type AppView = 'store' | 'admin';
@@ -80,12 +80,13 @@ export default function App() {
     totalAccounts, availableAccounts, soldAccounts, totalRevenue,
   } = useAccounts();
 
-  // ── Store UI state (modals, paymob) ──────────────────────────────
+  // ── Store UI state (modals, paymob, paddle) ─────────────────────
   const {
     isDeviceModalOpen, setIsDeviceModalOpen, handleOpenBuyFlow, handleSelectDevice,
     selectedAccountForView, setSelectedAccountForView,
     purchaseSuccessAccount, isPayingWithPaymob, paymobResponseData, paymobError,
-    handlePayWithPaymob, handleOpenOrder, handleCloseOrder,
+    handlePayWithPaymob, isPayingWithPaddle, paddleError, handlePayWithPaddle,
+    handleOpenOrder, handleCloseOrder,
   } = useStore();
 
   // ── Bootstrap & Paymob Auto-Verification ──────────────────────────
@@ -93,40 +94,94 @@ export default function App() {
     fetchAccounts();
     checkAdminAuth();
 
-    // التحقق التلقائي إذا كان العميل عائداً من صفحة دفع Paymob
+    // التحقق التلقائي إذا كان العميل عائداً من صفحة دفع Paymob أو Paddle
     const params = new URLSearchParams(window.location.search);
+    const hasPaddleParams =
+      params.get('paddle_callback') === 'true' ||
+      params.has('txn_id') ||
+      params.has('_ptxn');
     const hasPaymobParams =
       params.get('paymob_callback') === 'true' ||
-      params.has('success') ||
       params.has('id');
 
-    if (hasPaymobParams) {
+    let pendingGateway = 'paymob';
+    let pendingAccountId: string | undefined;
+    let pendingClaimToken: string | undefined;
+    let pendingTxId: string | undefined;
+
+    try {
+      const pending = localStorage.getItem('pes_pending_purchase');
+      if (pending) {
+        const parsed = JSON.parse(pending);
+        pendingGateway = parsed.gateway || 'paymob';
+        pendingAccountId = parsed.accountId;
+        pendingClaimToken = parsed.claimToken;
+        pendingTxId = parsed.transactionId;
+      }
+    } catch {
+      // ignore
+    }
+
+    if (hasPaddleParams || (pendingGateway === 'paddle' && (params.has('success') || params.has('txn_id')))) {
+      const isSuccess = params.get('success') !== 'false';
+      const txId = params.get('txn_id') || params.get('_ptxn') || pendingTxId;
+      const accountId = params.get('account_id') || pendingAccountId;
+      const claimToken = pendingClaimToken;
+
+      if (isSuccess && txId && accountId && claimToken) {
+        if (verifyingTxRef.current === txId) return;
+        verifyingTxRef.current = txId;
+
+        setIsVerifyingPayment(true);
+        paddleApi.verifyAndDeliver({
+          transactionId: txId,
+          accountId,
+          claimToken,
+        })
+          .then((res) => {
+            if (res.success && res.data?.deliveredAccount) {
+              setPaymentDeliveredAccount(res.data.deliveredAccount);
+              setPaymentBanner({
+                type: 'success',
+                message: 'تم تأكيد الدفع من Paddle بنجاح! تم استلام بيانات حسابك 🎉',
+              });
+              fetchAccounts();
+              try {
+                localStorage.removeItem('pes_pending_purchase');
+              } catch {}
+              window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+              setPaymentBanner({
+                type: 'error',
+                message: res.message || 'حدث خطأ أثناء استلام بيانات الحساب من Paddle',
+              });
+            }
+          })
+          .catch((err: any) => {
+            setPaymentBanner({
+              type: 'error',
+              message: err.message || 'فشل التحقق من نجاح الدفع مع Paddle',
+            });
+          })
+          .finally(() => {
+            setIsVerifyingPayment(false);
+          });
+      } else if (params.get('success') === 'false') {
+        setPaymentBanner({
+          type: 'error',
+          message: 'تم إلغاء عملية الدفع عبر Paddle أو لم تكتمل بنجاح.',
+        });
+        try {
+          localStorage.removeItem('pes_pending_purchase');
+        } catch {}
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } else if (hasPaymobParams || params.has('success')) {
       const isSuccess = params.get('success') === 'true';
       const txId = params.get('id');
 
-      let accountId = params.get('account_id');
-      let claimToken: string | undefined;
-      if (!accountId) {
-        try {
-          const pending = localStorage.getItem('pes_pending_purchase');
-          if (pending) {
-            const parsed = JSON.parse(pending);
-            accountId = parsed.accountId;
-            claimToken = parsed.claimToken;
-          }
-        } catch {
-          // ignore storage error
-        }
-      } else {
-        try {
-          const pending = localStorage.getItem('pes_pending_purchase');
-          if (pending) {
-            claimToken = JSON.parse(pending).claimToken;
-          }
-        } catch {
-          // ignore storage error
-        }
-      }
+      let accountId = params.get('account_id') || pendingAccountId;
+      let claimToken: string | undefined = pendingClaimToken;
 
       if (isSuccess && txId && accountId && claimToken) {
         if (verifyingTxRef.current === txId) {
@@ -371,13 +426,16 @@ export default function App() {
         />
       )}
 
-      {/* نافذة اختيار الدفع عبر Paymob */}
+      {/* نافذة اختيار الدفع عبر Paymob أو Paddle */}
       {purchaseSuccessAccount && (
         <PurchaseModal
           account={purchaseSuccessAccount}
           isPayingWithPaymob={isPayingWithPaymob}
           paymobResponseData={paymobResponseData}
           paymobError={paymobError}
+          isPayingWithPaddle={isPayingWithPaddle}
+          paddleError={paddleError}
+          onPayWithPaddle={handlePayWithPaddle}
           onClose={handleCloseOrder}
           onPayWithPaymob={handlePayWithPaymob}
           onPurchaseSuccess={fetchAccounts}
