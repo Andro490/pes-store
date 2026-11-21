@@ -9,7 +9,7 @@ export type AccountFormData = {
   title: string;
   platform: 'android' | 'ios';
   price: number;
-  oldPrice: number;
+  oldPrice?: number | null;
   teamStrength: number;
   coins: number;
   gp: string;
@@ -27,7 +27,7 @@ const DEFAULT_FORM: AccountFormData = {
   title: '',
   platform: 'android',
   price: 300,
-  oldPrice: 400,
+  oldPrice: null,
   teamStrength: 3170,
   coins: 1000,
   gp: '2.5M',
@@ -167,7 +167,7 @@ export function useAccounts(): UseAccountsReturn {
       title: account.title,
       platform: account.platform,
       price: account.price,
-      oldPrice: account.oldPrice ?? account.price + 100,
+      oldPrice: account.oldPrice ?? null,
       teamStrength: account.teamStrength,
       coins: account.coins,
       gp: account.gp,
@@ -190,7 +190,7 @@ export function useAccounts(): UseAccountsReturn {
       const payload: any = {
         ...accountFormData,
         price: Number(accountFormData.price),
-        oldPrice: Number(accountFormData.oldPrice),
+        oldPrice: accountFormData.oldPrice ? Number(accountFormData.oldPrice) : null,
         teamStrength: Number(accountFormData.teamStrength),
         coins: Number(accountFormData.coins),
         epicCount: Number(accountFormData.epicCount),
