@@ -112,6 +112,12 @@ export const pesAccountsApi = {
       method: 'PATCH',
     });
   },
+  applyDiscount: async (id: string, percentage: number): Promise<{ success: boolean; message: string; data: PesAccount }> => {
+    return request(`/pes-accounts/${id}/discount`, {
+      method: 'PATCH',
+      body: JSON.stringify({ percentage }),
+    });
+  },
   delete: async (id: string): Promise<{ success: boolean; message: string }> => {
     return request(`/pes-accounts/${id}`, {
       method: 'DELETE',

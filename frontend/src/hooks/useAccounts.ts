@@ -59,6 +59,7 @@ export interface UseAccountsReturn {
   fetchAccounts: () => Promise<void>;
   handleSaveAccount: (e: React.FormEvent) => Promise<void>;
   handleTogglePaid: (account: PesAccount) => Promise<void>;
+  handleApplyDiscount: (account: PesAccount, percentage: number) => Promise<void>;
   handleDeleteAccount: (account: PesAccount) => Promise<void>;
   // Form modal state
   isAccountModalOpen: boolean;
@@ -111,12 +112,19 @@ export function useAccounts(): UseAccountsReturn {
           return a.isAvailable ? -1 : 1;
         }
 
-        // 2. إذا حدد المستخدم فلتر ترتيب خاص بالسعر أو القوة
+        // 2. الحسابات التي عليها تخفيض تظهر أولاً في البداية
+        const aHasDiscount = Boolean(a.oldPrice && a.oldPrice > a.price);
+        const bHasDiscount = Boolean(b.oldPrice && b.oldPrice > b.price);
+        if (aHasDiscount !== bHasDiscount) {
+          return aHasDiscount ? -1 : 1;
+        }
+
+        // 3. إذا حدد المستخدم فلتر ترتيب خاص بالسعر أو القوة
         if (sortBy === 'price-asc') return a.price - b.price;
         if (sortBy === 'price-desc') return b.price - a.price;
         if (sortBy === 'strength') return b.teamStrength - a.teamStrength;
 
-        // 3. الترتيب الأساسي: حسب عدد الكوينز تنازلياً (الأعلى كوينز أولاً)
+        // 4. الترتيب الأساسي: حسب عدد الكوينز تنازلياً (الأعلى كوينز أولاً)
         if (b.coins !== a.coins) {
           return b.coins - a.coins;
         }
@@ -228,6 +236,20 @@ export function useAccounts(): UseAccountsReturn {
     }
   }, []);
 
+  const handleApplyDiscount = useCallback(async (account: PesAccount, percentage: number) => {
+    try {
+      const res = await pesAccountsApi.applyDiscount(account.id, percentage);
+      if (res.success && res.data) {
+        setAccounts((prev) =>
+          prev.map((acc) => (acc.id === account.id ? res.data : acc))
+        );
+        alert(res.message);
+      }
+    } catch (err: any) {
+      alert('فشل تطبيق التخفيض: ' + err.message);
+    }
+  }, []);
+
   const handleDeleteAccount = useCallback(
     async (account: PesAccount) => {
       if (!window.confirm(`هل أنت متأكد من حذف "${account.title}"?`)) return;
@@ -258,6 +280,7 @@ export function useAccounts(): UseAccountsReturn {
     fetchAccounts,
     handleSaveAccount,
     handleTogglePaid,
+    handleApplyDiscount,
     handleDeleteAccount,
     isAccountModalOpen,
     setIsAccountModalOpen,

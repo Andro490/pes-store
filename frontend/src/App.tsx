@@ -69,7 +69,7 @@ export default function App() {
     selectedPlatform, setSelectedPlatform,
     searchTerm, setSearchTerm,
     sortBy, setSortBy,
-    fetchAccounts, handleSaveAccount, handleTogglePaid, handleDeleteAccount,
+    fetchAccounts, handleSaveAccount, handleTogglePaid, handleApplyDiscount, handleDeleteAccount,
     isAccountModalOpen, setIsAccountModalOpen,
     editingAccount, accountFormData, setAccountFormData,
     handleOpenCreateModal, handleOpenEditModal,
@@ -138,6 +138,7 @@ export default function App() {
           onCreateAccount={handleOpenCreateModal}
           onEditAccount={handleOpenEditModal}
           onTogglePaid={handleTogglePaid}
+          onApplyDiscount={handleApplyDiscount}
           onDeleteAccount={handleDeleteAccount}
         />
       )}

@@ -357,6 +357,87 @@ router.patch('/:id/toggle-paid', authenticate, authorizeRoles('admin'), async (r
   }
 });
 
+// 5.1 PATCH /api/pes-accounts/:id/discount (تطبيق أو إلغاء نسبة التخفيض)
+router.patch('/:id/discount', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
+  try {
+    const { percentage } = req.body; // رقم النسبة مثلاً 20 أو 0 أو null لإلغاء التخفيض
+    const existing = await prisma.pesAccount.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!existing) {
+      res.status(404).json({ success: false, message: 'الحساب غير موجود' });
+      return;
+    }
+
+    const discountNum = Number(percentage);
+
+    if (isNaN(discountNum) || discountNum <= 0) {
+      // إزالة التخفيض وإعادة السعر الأصلي إذا كان موجوداً
+      const originalPrice = existing.oldPrice && existing.oldPrice > existing.price ? existing.oldPrice : existing.price;
+      const cleanBadge = existing.badge && existing.badge.includes('خصم') ? null : existing.badge;
+
+      const updated = await prisma.pesAccount.update({
+        where: { id: req.params.id },
+        data: {
+          price: originalPrice,
+          oldPrice: null,
+          badge: cleanBadge,
+        },
+      });
+
+      let players: string[] = [];
+      try { players = JSON.parse(updated.highlightPlayers); } catch { players = []; }
+
+      res.json({
+        success: true,
+        message: 'تم إزالة التخفيض واسترجاع السعر الأصلي بنجاح ✅',
+        data: {
+          ...updated,
+          platform: updated.platform as 'android' | 'ios',
+          highlightPlayers: players,
+          isAvailable: updated.isAvailable,
+        },
+      });
+      return;
+    }
+
+    if (discountNum >= 100) {
+      res.status(400).json({ success: false, message: 'نسبة التخفيض يجب أن تكون أقل من 100%' });
+      return;
+    }
+
+    // حساب السعر الأصلي والسعر الجديد
+    const basePrice = existing.oldPrice && existing.oldPrice > existing.price ? existing.oldPrice : existing.price;
+    const newPrice = Math.round(basePrice * (1 - discountNum / 100));
+
+    const updated = await prisma.pesAccount.update({
+      where: { id: req.params.id },
+      data: {
+        oldPrice: basePrice,
+        price: newPrice,
+        badge: `خصم ${discountNum}% 🔥`,
+      },
+    });
+
+    let players: string[] = [];
+    try { players = JSON.parse(updated.highlightPlayers); } catch { players = []; }
+
+    res.json({
+      success: true,
+      message: `تم تطبيق خصم ${discountNum}% بنجاح! السعر الجديد: ${newPrice} ج.م`,
+      data: {
+        ...updated,
+        platform: updated.platform as 'android' | 'ios',
+        highlightPlayers: players,
+        isAvailable: updated.isAvailable,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'فشل تطبيق التخفيض', error: error.message });
+  }
+});
+
 // 6. DELETE /api/pes-accounts/:id (حذف الحساب من قاعدة البيانات)
 router.delete('/:id', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
   try {

@@ -18,10 +18,14 @@ export function PurchaseModal({
   const [copied, setCopied] = useState(false);
 
   const handleTelegramClick = () => {
+    const discountText = account.oldPrice && account.oldPrice > account.price
+      ? ` (بعد خصم ${Math.round(((account.oldPrice - account.price) / account.oldPrice) * 100)}% - السعر الأصلي ${formatPrice(account.oldPrice)})`
+      : '';
+
     const orderDetails = `مرحباً 👋 أريد شراء حساب eFootball التالي:
 🪙 عدد الكوينز: ${account.coins} كوين
 🎮 الحساب: ${account.title}
-💰 السعر: ${formatPrice(account.price)}
+💰 السعر: ${formatPrice(account.price)}${discountText}
 📱 المنصة: ${account.platform === 'android' ? 'Android' : 'iOS'}
 🆔 كود الحساب: ${account.id}`;
 
@@ -102,18 +106,45 @@ export function PurchaseModal({
 
 
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)' }}>{t('orderAmountRequired')}</span>
-            <span
-              style={{
-                fontWeight: '900',
-                color: 'var(--accent-emerald)',
-                fontSize: '19px',
-                fontFamily: 'Outfit, sans-serif',
-              }}
-            >
-              {formatPrice(account.price)}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {account.oldPrice && account.oldPrice > account.price && (
+                <span
+                  style={{
+                    textDecoration: 'line-through',
+                    color: '#64748b',
+                    fontSize: '14px',
+                  }}
+                >
+                  {formatPrice(account.oldPrice)}
+                </span>
+              )}
+              <span
+                style={{
+                  fontWeight: '900',
+                  color: 'var(--accent-emerald)',
+                  fontSize: '19px',
+                  fontFamily: 'Outfit, sans-serif',
+                }}
+              >
+                {formatPrice(account.price)}
+              </span>
+              {account.oldPrice && account.oldPrice > account.price && (
+                <span
+                  style={{
+                    background: 'linear-gradient(135deg, #ea580c, #dc2626)',
+                    color: '#fff',
+                    fontSize: '11px',
+                    fontWeight: 900,
+                    padding: '2px 6px',
+                    borderRadius: '6px',
+                  }}
+                >
+                  خصم {Math.round(((account.oldPrice - account.price) / account.oldPrice) * 100)}%
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

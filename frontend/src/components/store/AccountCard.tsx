@@ -60,7 +60,24 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
           {/* Price Row */}
           <div className="card-price-row">
             <div>
-              <div className="price-currency-tag">{t('priceLabel')}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="price-currency-tag">{t('priceLabel')}</span>
+                {account.oldPrice && account.oldPrice > account.price && (
+                  <span
+                    style={{
+                      background: 'linear-gradient(135deg, #ea580c, #dc2626)',
+                      color: '#fff',
+                      fontSize: '10px',
+                      fontWeight: 900,
+                      padding: '2px 6px',
+                      borderRadius: '6px',
+                      boxShadow: '0 2px 8px rgba(234, 88, 12, 0.4)',
+                    }}
+                  >
+                    خصم {Math.round(((account.oldPrice - account.price) / account.oldPrice) * 100)}%
+                  </span>
+                )}
+              </div>
               <div className="price-main-block">
                 {prefix && (
                   <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--accent-emerald)' }}>
@@ -73,7 +90,7 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
                     {unit}
                   </span>
                 )}
-                {account.oldPrice && (
+                {account.oldPrice && account.oldPrice > account.price && (
                   <span className="price-old-num" style={{ marginInlineStart: '6px' }}>
                     {formatPrice(account.oldPrice)}
                   </span>

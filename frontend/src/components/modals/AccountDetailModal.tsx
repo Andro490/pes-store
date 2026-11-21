@@ -30,15 +30,42 @@ export function AccountDetailModal({ account, onClose, onOrder }: AccountDetailM
             }}
           >
             <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff' }}>{account.title}</h3>
-            <div
-              style={{
-                fontSize: '24px',
-                fontWeight: '900',
-                color: 'var(--accent-emerald)',
-                fontFamily: 'Outfit, sans-serif',
-              }}
-            >
-              {formatPrice(account.price)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {account.oldPrice && account.oldPrice > account.price && (
+                <span
+                  style={{
+                    fontSize: '16px',
+                    textDecoration: 'line-through',
+                    color: '#64748b',
+                  }}
+                >
+                  {formatPrice(account.oldPrice)}
+                </span>
+              )}
+              <div
+                style={{
+                  fontSize: '24px',
+                  fontWeight: '900',
+                  color: 'var(--accent-emerald)',
+                  fontFamily: 'Outfit, sans-serif',
+                }}
+              >
+                {formatPrice(account.price)}
+              </div>
+              {account.oldPrice && account.oldPrice > account.price && (
+                <span
+                  style={{
+                    background: 'linear-gradient(135deg, #ea580c, #dc2626)',
+                    color: '#fff',
+                    fontSize: '11px',
+                    fontWeight: 900,
+                    padding: '3px 7px',
+                    borderRadius: '6px',
+                  }}
+                >
+                  خصم {Math.round(((account.oldPrice - account.price) / account.oldPrice) * 100)}%
+                </span>
+              )}
             </div>
           </div>
 
