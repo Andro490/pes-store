@@ -52,12 +52,11 @@ router.get('/', async (req: Request, res: Response) => {
 
     const accounts = await prisma.pesAccount.findMany({
       where,
-      include: {
-        _count: {
-          select: { stocks: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { isAvailable: 'desc' },
+        { coins: 'desc' },
+        { createdAt: 'desc' },
+      ],
     });
 
     // تحويل highlightPlayers من JSON string إلى مصفوفة
@@ -68,13 +67,11 @@ router.get('/', async (req: Request, res: Response) => {
       } catch {
         players = [];
       }
-      const stockCount = acc._count?.stocks ?? 0;
       return {
         ...acc,
         platform: acc.platform as 'android' | 'ios',
         highlightPlayers: players,
-        stockCount,
-        isAvailable: Boolean(acc.isAvailable && stockCount > 0),
+        isAvailable: Boolean(acc.isAvailable),
       };
     });
 
@@ -103,11 +100,6 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const account = await prisma.pesAccount.findUnique({
       where: { id: req.params.id },
-      include: {
-        _count: {
-          select: { stocks: true },
-        },
-      },
     });
 
     if (!account) {
@@ -122,15 +114,13 @@ router.get('/:id', async (req: Request, res: Response) => {
       players = [];
     }
 
-    const stockCount = account._count?.stocks ?? 0;
     res.json({
       success: true,
       data: {
         ...account,
         platform: account.platform as 'android' | 'ios',
         highlightPlayers: players,
-        stockCount,
-        isAvailable: Boolean(account.isAvailable && stockCount > 0),
+        isAvailable: Boolean(account.isAvailable),
       },
     });
   } catch (error: any) {
@@ -245,20 +235,14 @@ router.post('/', authenticate, authorizeRoles('admin'), async (req: Request, res
       },
     });
 
-    let stockAdded = 0;
-    if (bulkAccounts && typeof bulkAccounts === 'string') {
-      const stockRes = await StockService.addBulkStock(newId, bulkAccounts);
-      stockAdded = stockRes.addedCount;
-    }
-
     res.status(201).json({
       success: true,
-      message: `تم حفظ الحساب بنجاح وعرضه في المتجر ✅${stockAdded > 0 ? ` (تمت إضافة ${stockAdded} حسابات للمخزون)` : ''}`,
+      message: 'تم حفظ الحساب بنجاح وعرضه في المتجر ✅',
       data: {
         ...created,
         platform: created.platform as 'android' | 'ios',
         highlightPlayers: playersArray,
-        stockCount: stockAdded,
+        isAvailable: true,
       },
     });
   } catch (error: any) {
@@ -301,20 +285,9 @@ router.put('/:id', authenticate, authorizeRoles('admin'), async (req: Request, r
       dataToUpdate.highlightPlayers = JSON.stringify(playersArray);
     }
 
-    // Add bulk accounts if passed in edit
-    if (req.body.bulkAccounts && typeof req.body.bulkAccounts === 'string') {
-      await StockService.addBulkStock(req.params.id, req.body.bulkAccounts);
-      dataToUpdate.isAvailable = true;
-    }
-
     const updated = await prisma.pesAccount.update({
       where: { id: req.params.id },
       data: dataToUpdate,
-      include: {
-        _count: {
-          select: { stocks: true },
-        },
-      },
     });
 
     let players: string[] = [];
@@ -331,7 +304,7 @@ router.put('/:id', authenticate, authorizeRoles('admin'), async (req: Request, r
         ...updated,
         platform: updated.platform as 'android' | 'ios',
         highlightPlayers: players,
-        stockCount: updated._count?.stocks ?? 0,
+        isAvailable: Boolean(updated.isAvailable),
       },
     });
   } catch (error: any) {
@@ -352,18 +325,13 @@ router.patch('/:id/toggle-paid', authenticate, authorizeRoles('admin'), async (r
     }
 
     const nextAvailable = !existing.isAvailable;
-    const nextBadge = !nextAvailable ? 'تم الدفع 🔴' : null;
+    const nextBadge = !nextAvailable ? 'نفد المخزون 🔴' : null;
 
     const updated = await prisma.pesAccount.update({
       where: { id: req.params.id },
       data: {
         isAvailable: nextAvailable,
         badge: nextBadge,
-      },
-      include: {
-        _count: {
-          select: { stocks: true },
-        },
       },
     });
 
@@ -376,12 +344,12 @@ router.patch('/:id/toggle-paid', authenticate, authorizeRoles('admin'), async (r
 
     res.json({
       success: true,
-      message: updated.isAvailable ? 'تمت إعادة الحساب متاحاً للبيع 🟢' : 'تم تعيين الحساب كـ مدفوع / مباع 🔴',
+      message: updated.isAvailable ? 'تمت إعادة الحساب متاحاً للبيع 🟢' : 'تم تعيين الحساب كـ غير متاح / نفد المخزون 🔴',
       data: {
         ...updated,
         platform: updated.platform as 'android' | 'ios',
         highlightPlayers: players,
-        stockCount: updated._count?.stocks ?? 0,
+        isAvailable: updated.isAvailable,
       },
     });
   } catch (error: any) {

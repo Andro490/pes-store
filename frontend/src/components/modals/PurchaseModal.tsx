@@ -100,14 +100,7 @@ export function PurchaseModal({
             </span>
           </div>
 
-          {account.stockCount !== undefined && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>المخزون المتوفر:</span>
-              <span style={{ fontWeight: 'bold', color: account.stockCount > 0 ? '#34d399' : '#f87171' }}>
-                {account.stockCount > 0 ? `${account.stockCount} حساب جاهز للتسليم ⚡` : 'نفد المخزون 🔴'}
-              </span>
-            </div>
-          )}
+
 
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ color: 'var(--text-muted)' }}>{t('orderAmountRequired')}</span>

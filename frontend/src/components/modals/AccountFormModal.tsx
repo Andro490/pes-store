@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { AccountFormData } from '../../hooks/useAccounts';
 import type { PesAccount } from '../../types';
@@ -59,15 +59,7 @@ export function AccountFormModal({
     }
   };
 
-  const parsedStockCount = useMemo(() => {
-    if (!formData.bulkAccounts) return 0;
-    return formData.bulkAccounts
-      .split(/\r?\n/)
-      .filter((line) => {
-        const parts = line.split('|').map((s) => s.trim());
-        return parts.length >= 2 && Boolean(parts[0]) && Boolean(parts[1]);
-      }).length;
-  }, [formData.bulkAccounts]);
+
 
   return (
     <div className="modal-backdrop-overlay">
@@ -267,7 +259,7 @@ export function AccountFormModal({
             />
           </FormField>
 
-          {/* Bulk Accounts Stock Input */}
+          {/* Storefront status banner */}
           <div
             style={{
               background: 'linear-gradient(145deg, rgba(14, 20, 36, 0.8), rgba(6, 182, 212, 0.05))',
@@ -276,88 +268,11 @@ export function AccountFormModal({
               padding: '14px',
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '8px',
-                flexWrap: 'wrap',
-                gap: '8px',
-              }}
-            >
-              <label
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  color: '#38bdf8',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                <span>📦</span>
-                <span>بيانات الحسابات والمخزون (البريد | الباسورد | رابط استقبال الكود):</span>
-              </label>
-
-              {parsedStockCount > 0 ? (
-                <span
-                  style={{
-                    background: 'rgba(16, 185, 129, 0.2)',
-                    color: '#34d399',
-                    border: '1px solid rgba(16, 185, 129, 0.4)',
-                    padding: '2px 10px',
-                    borderRadius: '12px',
-                    fontSize: '11px',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  ⚡ تم التعرف على {parsedStockCount} حسابات جاهزة للإضافة
-                </span>
-              ) : (
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                  {editingAccount?.stockCount !== undefined
-                    ? `المخزون الحالي: ${editingAccount.stockCount} حساب`
-                    : 'يمكنك لصق عدة أسطر دفعة واحدة'}
-                </span>
-              )}
+            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#38bdf8', marginBottom: '4px' }}>
+              💡 عرض وتوفر الحساب:
             </div>
-
-            <textarea
-              rows={4}
-              placeholder={`muzxzkolfs@lutianqiwy.xyz | abcd123456 | http://mail.lutianqiwy.xyz/\ncguxlikybu@lutianqiwy.xyz | abcd123456 | http://mail.lutianqiwy.xyz/\niedvclcbuj@lutianqiwy.xyz | abcd123456 | http://mail.lutianqiwy.xyz/`}
-              value={formData.bulkAccounts}
-              onChange={(e) => field('bulkAccounts')(e.target.value)}
-              className="search-input-field"
-              dir="ltr"
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                fontFamily: 'monospace',
-                fontSize: '12px',
-                lineHeight: '1.6',
-                background: '#090d16',
-                borderColor: parsedStockCount > 0 ? '#10b981' : 'rgba(255, 255, 255, 0.15)',
-                color: '#e2e8f0',
-                resize: 'vertical',
-              }}
-            />
-
-            <div
-              style={{
-                fontSize: '11px',
-                color: '#94a3b8',
-                marginTop: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                textAlign: isRTL ? 'right' : 'left',
-              }}
-            >
-              <span>ℹ️</span>
-              <span>
-                كل سطر يمثل حساب منفصل. افصل بين (البريد | كلمة المرور | رابط الأكواد) بالرمز <strong>|</strong>
-              </span>
+            <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.6' }}>
+              يُعرض الحساب فوراً في واجهة المتجر للزبائن للتواصل والشراء عبر تيليجرام. يمكنك التحكم في كونه متاحاً للبيع أو تم البيع بنقرة زر واحدة من لوحة التحكم.
             </div>
           </div>
 

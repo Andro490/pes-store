@@ -106,9 +106,20 @@ export function useAccounts(): UseAccountsReturn {
         return true;
       })
       .sort((a, b) => {
+        // 1. المتاح يظهر أولاً دائماً، والمنتهي/المباع يظهر في الآخر
+        if (a.isAvailable !== b.isAvailable) {
+          return a.isAvailable ? -1 : 1;
+        }
+
+        // 2. إذا حدد المستخدم فلتر ترتيب خاص بالسعر أو القوة
         if (sortBy === 'price-asc') return a.price - b.price;
         if (sortBy === 'price-desc') return b.price - a.price;
         if (sortBy === 'strength') return b.teamStrength - a.teamStrength;
+
+        // 3. الترتيب الأساسي: حسب عدد الكوينز تنازلياً (الأعلى كوينز أولاً)
+        if (b.coins !== a.coins) {
+          return b.coins - a.coins;
+        }
         return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
       });
   }, [accounts, selectedPlatform, searchTerm, sortBy]);

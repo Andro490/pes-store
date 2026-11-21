@@ -59,7 +59,7 @@ export const translations = {
     teamStrength: 'القوة:',
     priceLabel: 'السعر المطلوب:',
     currency: 'جنيه',
-    coinsBalance: 'تقييم الفريق (Score)',
+    coinsBalance: 'الكوينز',
     epicLegends: 'أساطير الإبيك:',
     playerUnit: 'لاعب',
     gpBalance: 'نقاط الخبرة:',
@@ -81,7 +81,7 @@ export const translations = {
 
     // Account Details Modal
     modalStrength: 'قوة التشكيلة',
-    modalCoins: 'تقييم الفريق (Score)',
+    modalCoins: 'الكوينز',
     modalGp: 'نقاط الخبرة',
     modalEpic: 'لاعبي الإبيك',
     modalExtraDetails: 'تفاصيل إضافية:',
@@ -242,7 +242,7 @@ export const translations = {
     teamStrength: 'Strength:',
     priceLabel: 'Price:',
     currency: 'EGP',
-    coinsBalance: 'Squad Rating',
+    coinsBalance: 'Coins',
     epicLegends: 'Epic Legends:',
     playerUnit: 'Players',
     gpBalance: 'Club XP:',
@@ -264,7 +264,7 @@ export const translations = {
 
     // Account Details Modal
     modalStrength: 'Team Strength',
-    modalCoins: 'Squad Rating',
+    modalCoins: 'Coins',
     modalGp: 'Club XP',
     modalEpic: 'Epic Players',
     modalExtraDetails: 'Additional Details:',
