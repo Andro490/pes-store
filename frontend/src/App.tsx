@@ -18,23 +18,17 @@ import { AdminLogin } from './components/admin/AdminLogin';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 
 // ─── Modals ────────────────────────────────────────────────────────
-import { DeviceModal } from './components/modals/DeviceModal';
 import { AccountDetailModal } from './components/modals/AccountDetailModal';
 import { PurchaseModal } from './components/modals/PurchaseModal';
 import { AccountFormModal } from './components/modals/AccountFormModal';
 import { SupportChatWidget } from './components/support/SupportChatWidget';
-import { LegalPage } from './components/legal/LegalPages';
 
-type AppView = 'store' | 'admin' | 'terms' | 'privacy' | 'refund' | 'pricing';
+type AppView = 'store' | 'admin';
 
 function getInitialView(): AppView {
   const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
   const hash = window.location.hash.toLowerCase();
   if (path === '/admfoad' || hash === '#admfoad') return 'admin';
-  if (path === '/terms' || hash === '#terms') return 'terms';
-  if (path === '/privacy' || hash === '#privacy') return 'privacy';
-  if (path === '/refund' || path === '/refunds' || hash === '#refund' || hash === '#refunds') return 'refund';
-  if (path === '/pricing' || hash === '#pricing') return 'pricing';
   return 'store';
 }
 
@@ -43,7 +37,7 @@ export default function App() {
 
   const navigateTo = (view: AppView) => {
     setCurrentView(view);
-    const path = view === 'admin' ? '/admfoad' : view === 'store' ? '/' : `/${view}`;
+    const path = view === 'admin' ? '/admfoad' : '/';
     window.history.pushState(null, '', path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -66,7 +60,6 @@ export default function App() {
   // ── Accounts data + CRUD ─────────────────────────────────────────
   const {
     accounts, filteredAccounts, loading, error,
-    selectedPlatform, setSelectedPlatform,
     searchTerm, setSearchTerm,
     sortBy, setSortBy,
     fetchAccounts, handleSaveAccount, handleTogglePaid, handleApplyDiscount, handleDeleteAccount,
@@ -78,7 +71,7 @@ export default function App() {
 
   // ── Store UI state ───────────────────────────────────────────────
   const {
-    isDeviceModalOpen, setIsDeviceModalOpen, handleOpenBuyFlow, handleSelectDevice,
+    handleOpenBuyFlow,
     selectedAccountForView, setSelectedAccountForView,
     purchaseSuccessAccount,
     handleOpenOrder, handleCloseOrder,
@@ -146,15 +139,13 @@ export default function App() {
       {/* ══ STORE VIEW ══════════════════════════════════════════════ */}
       {currentView === 'store' && (
         <>
-          <HeroSection totalAccounts={totalAccounts} onBuyClick={handleOpenBuyFlow} />
+          <HeroSection totalAccounts={totalAccounts} />
 
           <StoreSection
             accounts={accounts}
             filteredAccounts={filteredAccounts}
             loading={loading}
             error={error}
-            selectedPlatform={selectedPlatform}
-            setSelectedPlatform={setSelectedPlatform}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             sortBy={sortBy}
@@ -166,19 +157,7 @@ export default function App() {
         </>
       )}
 
-      {/* ══ LEGAL & PRICING PAGES (Paddle Compliance) ════════════════ */}
-      {(currentView === 'terms' || currentView === 'privacy' || currentView === 'refund' || currentView === 'pricing') && (
-        <LegalPage type={currentView} onBackToStore={() => navigateTo('store')} />
-      )}
-
       {/* ══ MODALS ══════════════════════════════════════════════════ */}
-
-      {isDeviceModalOpen && (
-        <DeviceModal
-          onClose={() => setIsDeviceModalOpen(false)}
-          onSelectDevice={(platform) => handleSelectDevice(platform, setSelectedPlatform)}
-        />
-      )}
 
       {selectedAccountForView && (
         <AccountDetailModal
@@ -200,8 +179,6 @@ export default function App() {
         />
       )}
 
-
-
       {isAccountModalOpen && (
         <AccountFormModal
           editingAccount={editingAccount}
@@ -216,11 +193,7 @@ export default function App() {
       <SupportChatWidget />
 
       {/* ── Footer ── */}
-      <Footer
-        isAdminLoggedIn={isAdminLoggedIn}
-        onAdminClick={() => navigateTo('admin')}
-        onNavigate={navigateTo}
-      />
+      <Footer />
     </div>
   );
 }

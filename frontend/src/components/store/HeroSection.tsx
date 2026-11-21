@@ -3,10 +3,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 
 interface HeroSectionProps {
   totalAccounts: number;
-  onBuyClick: () => void;
 }
 
-export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
+export function HeroSection({ totalAccounts }: HeroSectionProps) {
   const { t } = useLanguage();
   const [isCardHovered, setIsCardHovered] = useState(false);
 
@@ -85,8 +84,8 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
 
           {/* CTA Buttons */}
           <div className="hero-buttons-container">
-            <button
-              onClick={onBuyClick}
+            <a
+              href="#store-section"
               id="buy-main-button"
               className="btn-hero-primary-buy"
               style={{
@@ -94,6 +93,10 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
                 color: '#ffffff',
                 boxShadow: '0 8px 32px rgba(220, 38, 38, 0.55), 0 0 20px rgba(239, 68, 68, 0.35)',
                 border: '1px solid rgba(248, 113, 113, 0.6)',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
               }}
             >
               <span style={{ fontSize: '22px' }}>⚡</span>
@@ -106,9 +109,9 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
                   color: '#ffffff',
                 }}
               >
-                {t('heroSelectDevice')}
+                تصفح الحسابات
               </span>
-            </button>
+            </a>
 
             <a
               href="#store-section"
@@ -211,7 +214,10 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
               overflow: 'hidden',
               cursor: 'pointer',
             }}
-            onClick={onBuyClick}
+            onClick={() => {
+              const el = document.getElementById('store-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
           >
             {/* Holographic Sweep Light */}
             <div

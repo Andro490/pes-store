@@ -26,7 +26,7 @@ export function PurchaseModal({
 🪙 عدد الكوينز: ${account.coins} كوين
 🎮 الحساب: ${account.title}
 💰 السعر: ${formatPrice(account.price)}${discountText}
-📱 المنصة: ${account.platform === 'android' ? 'Android' : 'iOS'}
+📱 يعمل على: Android + iOS
 🆔 كود الحساب: ${account.id}`;
 
     // Copy to clipboard as backup
@@ -93,7 +93,7 @@ export function PurchaseModal({
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
             <span style={{ color: 'var(--text-muted)' }}>{t('orderDeviceOS')}</span>
             <span style={{ fontWeight: 'bold', color: '#fff' }}>
-              {account.platform === 'android' ? '🤖 Android' : '🍏 iOS'}
+              📱 متاح للجهازين (Android + iOS)
             </span>
           </div>
 

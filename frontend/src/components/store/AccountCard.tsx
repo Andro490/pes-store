@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { PesAccount } from '../../types';
 
@@ -42,11 +42,11 @@ export function AccountCard({ account, onPreview, onOrder }: AccountCardProps) {
           )
         )}
 
-        {/* Platform Badge */}
+        {/* Platform Badge - ينفع للجهازين */}
         <div className="card-badge-top-left" style={{ top: account.isAvailable ? '12px' : '44px' }}>
-          <span className={`platform-badge ${account.platform}`}>
-            <span>{account.platform === 'android' ? '🤖' : '🍏'}</span>
-            <span>{account.platform === 'android' ? 'Android' : 'iOS'}</span>
+          <span className="platform-badge" style={{ background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#fff' }}>
+            <span>📱</span>
+            <span>Android + iOS</span>
           </span>
         </div>
 

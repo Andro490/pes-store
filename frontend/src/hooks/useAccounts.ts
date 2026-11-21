@@ -95,7 +95,6 @@ export function useAccounts(): UseAccountsReturn {
   const filteredAccounts = useMemo(() => {
     return accounts
       .filter((acc) => {
-        if (selectedPlatform !== 'all' && acc.platform !== selectedPlatform) return false;
         if (searchTerm.trim()) {
           const term = searchTerm.toLowerCase();
           return (

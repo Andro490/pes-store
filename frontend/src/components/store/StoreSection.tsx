@@ -1,15 +1,13 @@
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { PesAccount } from '../../types';
 import { AccountCard } from './AccountCard';
-import type { PlatformFilter, SortOption } from '../../hooks/useAccounts';
+import type { SortOption } from '../../hooks/useAccounts';
 
 interface StoreSectionProps {
   accounts: PesAccount[];
   filteredAccounts: PesAccount[];
   loading: boolean;
   error: string | null;
-  selectedPlatform: PlatformFilter;
-  setSelectedPlatform: (p: PlatformFilter) => void;
   searchTerm: string;
   setSearchTerm: (s: string) => void;
   sortBy: SortOption;
@@ -24,8 +22,6 @@ export function StoreSection({
   filteredAccounts,
   loading,
   error,
-  selectedPlatform,
-  setSelectedPlatform,
   searchTerm,
   setSearchTerm,
   sortBy,
@@ -62,47 +58,23 @@ export function StoreSection({
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="filter-bar-card">
-        <div className="filter-pills-group">
-          <span className="filter-group-label">{t('osFilterLabel')}</span>
-
-          <button
-            onClick={() => setSelectedPlatform('all')}
-            className={`btn-filter-pill ${selectedPlatform === 'all' ? 'active-all' : ''}`}
+      {/* Filter / Sort Bar */}
+      <div className="filter-bar-card" style={{ justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '13px', color: '#94a3b8' }}>إجمالي الحسابات المعروضة:</span>
+          <span
+            style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              color: '#ef4444',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              fontWeight: 800,
+              fontSize: '13px',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+            }}
           >
-            <div className="filter-pill-content">
-              <span>🌐</span>
-              <span>{t('filterAll')}</span>
-            </div>
-            <span className="pill-count-bubble">{accounts.length}</span>
-          </button>
-
-          <button
-            onClick={() => setSelectedPlatform('android')}
-            className={`btn-filter-pill ${selectedPlatform === 'android' ? 'active-android' : ''}`}
-          >
-            <div className="filter-pill-content">
-              <span>🤖</span>
-              <span>{t('filterAndroid')}</span>
-            </div>
-            <span className="pill-count-bubble">
-              {accounts.filter((a) => a.platform === 'android').length}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setSelectedPlatform('ios')}
-            className={`btn-filter-pill ${selectedPlatform === 'ios' ? 'active-ios' : ''}`}
-          >
-            <div className="filter-pill-content">
-              <span>🍏</span>
-              <span>{t('filterIos')}</span>
-            </div>
-            <span className="pill-count-bubble">
-              {accounts.filter((a) => a.platform === 'ios').length}
-            </span>
-          </button>
+            {accounts.length} حساب
+          </span>
         </div>
 
         {/* Sort */}
@@ -148,7 +120,6 @@ export function StoreSection({
           </p>
           <button
             onClick={() => {
-              setSelectedPlatform('all');
               setSearchTerm('');
             }}
             className="btn-filter-pill active-all"
