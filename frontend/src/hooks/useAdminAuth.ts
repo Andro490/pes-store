@@ -60,27 +60,43 @@ export function useAdminAuth(onLogout?: () => void): UseAdminAuthReturn {
     }, 1000);
   }, []);
 
-  // On mount: check localStorage for existing lock, then check server
+  // On mount: check admin auth first! If valid session, don't lock.
   useEffect(() => {
-    const stored = localStorage.getItem(LOCK_STORAGE_KEY);
-    if (stored) {
-      const lockUntil = parseInt(stored, 10);
-      const remaining = Math.ceil((lockUntil - Date.now()) / 1000);
-      if (remaining > 0) {
-        startCountdown(remaining);
-        return; // No need to ping server
-      } else {
+    authApi.adminVerify().then(res => {
+      if (res && res.success) {
+        setIsAdminLoggedIn(true);
+        setAdminUser(res.data);
         localStorage.removeItem(LOCK_STORAGE_KEY);
+        if (countdownRef.current) clearInterval(countdownRef.current);
+        setIsLocked(false);
+        setLockRemainingSeconds(0);
+      } else {
+        checkLockout();
       }
-    }
+    }).catch(() => {
+      checkLockout();
+    });
 
-    // Also ping server in case locked from another tab/browser
-    authApi.getAdminLockStatus().then(res => {
-      if (res?.data?.isLocked && res.data.remainingSeconds > 0) {
-        localStorage.setItem(LOCK_STORAGE_KEY, String(res.data.lockUntil));
-        startCountdown(res.data.remainingSeconds);
+    function checkLockout() {
+      const stored = localStorage.getItem(LOCK_STORAGE_KEY);
+      if (stored) {
+        const lockUntil = parseInt(stored, 10);
+        const remaining = Math.ceil((lockUntil - Date.now()) / 1000);
+        if (remaining > 0) {
+          startCountdown(remaining);
+          return;
+        } else {
+          localStorage.removeItem(LOCK_STORAGE_KEY);
+        }
       }
-    }).catch(() => {/* ignore */});
+
+      authApi.getAdminLockStatus().then(res => {
+        if (res?.data?.isLocked && res.data.remainingSeconds > 0) {
+          localStorage.setItem(LOCK_STORAGE_KEY, String(res.data.lockUntil));
+          startCountdown(res.data.remainingSeconds);
+        }
+      }).catch(() => {});
+    }
 
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current);

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 interface HeroSectionProps {

@@ -227,6 +227,27 @@ function clearLockout(req: Request) {
 
 // Check Lock Status Endpoint
 export const checkAdminLockStatus = (req: Request, res: Response): void => {
+  // If user already has a valid admin session cookie/token, do NOT lock them out!
+  const cookieToken = (req as any).cookies?.admin_token;
+  const authHeader = req.headers.authorization;
+  const token = cookieToken || (authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined);
+
+  if (token && process.env.JWT_SECRET) {
+    try {
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded && decoded.role === 'admin') {
+        clearLockout(req);
+        res.json({
+          success: true,
+          data: { isLocked: false, lockUntil: 0, remainingSeconds: 0, remainingMinutes: 0, attempts: 0 },
+        });
+        return;
+      }
+    } catch {
+      // invalid token, continue to normal lock check
+    }
+  }
+
   const lockInfo = getLockInfo(req);
   res.json({
     success: true,
@@ -343,6 +364,7 @@ export const adminLogout = (_req: Request, res: Response): void => {
 
 // ─── Admin Verify Token ───────────────────────────────────────────────────────
 export const verifyAdmin = (req: Request, res: Response): void => {
+  clearLockout(req);
   res.json({
     success: true,
     message: 'جلسة الإدارة صالحة',
