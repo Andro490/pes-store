@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 // ─── Hooks ─────────────────────────────────────────────────────────
 import { useAdminAuth } from './hooks/useAdminAuth';
@@ -25,10 +25,6 @@ import { AccountFormModal } from './components/modals/AccountFormModal';
 import { SupportChatWidget } from './components/support/SupportChatWidget';
 import { LegalPage } from './components/legal/LegalPages';
 
-// ─── Services & Types ──────────────────────────────────────────────
-import { paymobApi, paddleApi } from './services/api';
-import type { DeliveredAccount } from './types';
-
 type AppView = 'store' | 'admin' | 'terms' | 'privacy' | 'refund' | 'pricing';
 
 function getInitialView(): AppView {
@@ -44,12 +40,6 @@ function getInitialView(): AppView {
 
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>(getInitialView);
-
-  // Paymob post-payment automatic verification & delivery state
-  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
-  const [paymentDeliveredAccount, setPaymentDeliveredAccount] = useState<DeliveredAccount | null>(null);
-  const [paymentBanner, setPaymentBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const verifyingTxRef = useRef<string | null>(null);
 
   const navigateTo = (view: AppView) => {
     setCurrentView(view);
@@ -86,177 +76,19 @@ export default function App() {
     totalAccounts, availableAccounts, soldAccounts, totalRevenue,
   } = useAccounts();
 
-  // ── Store UI state (modals, paymob, paddle) ─────────────────────
+  // ── Store UI state ───────────────────────────────────────────────
   const {
     isDeviceModalOpen, setIsDeviceModalOpen, handleOpenBuyFlow, handleSelectDevice,
     selectedAccountForView, setSelectedAccountForView,
-    purchaseSuccessAccount, isPayingWithPaymob, paymobResponseData, paymobError,
-    handlePayWithPaymob, isPayingWithPaddle, paddleError, handlePayWithPaddle,
+    purchaseSuccessAccount,
     handleOpenOrder, handleCloseOrder,
   } = useStore();
 
-  // ── Bootstrap & Paymob Auto-Verification ──────────────────────────
+  // ── Bootstrap ────────────────────────────────────────────────────
   useEffect(() => {
     fetchAccounts();
     checkAdminAuth();
-
-    // التحقق التلقائي إذا كان العميل عائداً من صفحة دفع Paymob أو Paddle
-    const params = new URLSearchParams(window.location.search);
-    const hasPaddleParams =
-      params.get('paddle_callback') === 'true' ||
-      params.has('txn_id') ||
-      params.has('_ptxn');
-    const hasPaymobParams =
-      params.get('paymob_callback') === 'true' ||
-      params.has('id');
-
-    let pendingGateway = 'paymob';
-    let pendingAccountId: string | undefined;
-    let pendingClaimToken: string | undefined;
-    let pendingTxId: string | undefined;
-
-    try {
-      const pending = localStorage.getItem('pes_pending_purchase');
-      if (pending) {
-        const parsed = JSON.parse(pending);
-        pendingGateway = parsed.gateway || 'paymob';
-        pendingAccountId = parsed.accountId;
-        pendingClaimToken = parsed.claimToken;
-        pendingTxId = parsed.transactionId;
-      }
-    } catch {
-      // ignore
-    }
-
-    if (hasPaddleParams || (pendingGateway === 'paddle' && (params.has('success') || params.has('txn_id')))) {
-      const isSuccess = params.get('success') !== 'false';
-      const txId = params.get('txn_id') || params.get('_ptxn') || pendingTxId;
-      const accountId = params.get('account_id') || pendingAccountId;
-      const claimToken = pendingClaimToken;
-
-      if (isSuccess && txId && accountId && claimToken) {
-        if (verifyingTxRef.current === txId) return;
-        verifyingTxRef.current = txId;
-
-        setIsVerifyingPayment(true);
-        paddleApi.verifyAndDeliver({
-          transactionId: txId,
-          accountId,
-          claimToken,
-        })
-          .then((res) => {
-            if (res.success && res.data?.deliveredAccount) {
-              setPaymentDeliveredAccount(res.data.deliveredAccount);
-              setPaymentBanner({
-                type: 'success',
-                message: 'تم تأكيد الدفع من Paddle بنجاح! تم استلام بيانات حسابك 🎉',
-              });
-              fetchAccounts();
-              try {
-                localStorage.removeItem('pes_pending_purchase');
-              } catch {}
-              window.history.replaceState({}, document.title, window.location.pathname);
-            } else {
-              setPaymentBanner({
-                type: 'error',
-                message: res.message || 'حدث خطأ أثناء استلام بيانات الحساب من Paddle',
-              });
-            }
-          })
-          .catch((err: any) => {
-            setPaymentBanner({
-              type: 'error',
-              message: err.message || 'فشل التحقق من نجاح الدفع مع Paddle',
-            });
-          })
-          .finally(() => {
-            setIsVerifyingPayment(false);
-          });
-      } else if (params.get('success') === 'false') {
-        setPaymentBanner({
-          type: 'error',
-          message: 'تم إلغاء عملية الدفع عبر Paddle أو لم تكتمل بنجاح.',
-        });
-        try {
-          localStorage.removeItem('pes_pending_purchase');
-        } catch {}
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    } else if (hasPaymobParams || params.has('success')) {
-      const isSuccess = params.get('success') === 'true';
-      const txId = params.get('id');
-
-      let accountId = params.get('account_id') || pendingAccountId;
-      let claimToken: string | undefined = pendingClaimToken;
-
-      if (isSuccess && txId && accountId && claimToken) {
-        if (verifyingTxRef.current === txId) {
-          return; // تم إرسال الطلب بالفعل، منع التكرار بالتوازي (Strict Mode)
-        }
-        verifyingTxRef.current = txId;
-
-        setIsVerifyingPayment(true);
-        paymobApi.verifyAndDeliver({
-          transactionId: txId,
-          accountId,
-          claimToken,
-        })
-          .then((res) => {
-            if (res.success && res.data?.deliveredAccount) {
-              setPaymentDeliveredAccount(res.data.deliveredAccount);
-              setPaymentBanner({
-                type: 'success',
-                message: 'تم تأكيد الدفع من Paymob بنجاح! تم استلام بيانات حسابك 🎉',
-              });
-              fetchAccounts(); // تحديث قائمة الحسابات لخصم المخزون
-              try {
-                localStorage.removeItem('pes_pending_purchase');
-              } catch {}
-              window.history.replaceState({}, document.title, window.location.pathname);
-            } else {
-              setPaymentBanner({
-                type: 'error',
-                message: res.message || 'حدث خطأ أثناء استلام بيانات الحساب',
-              });
-            }
-          })
-          .catch((err: any) => {
-            setPaymentBanner({
-              type: 'error',
-              message: err.message || 'فشل التحقق من نجاح الدفع مع Paymob',
-            });
-          })
-          .finally(() => {
-            setIsVerifyingPayment(false);
-          });
-      } else if (isSuccess && txId) {
-        setPaymentBanner({
-          type: 'error',
-          message: 'تعذر التحقق من بيانات الطلب في هذا المتصفح. أعد فتح صفحة الدفع الأصلية أو تواصل مع الدعم.',
-        });
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else if (params.get('success') === 'false') {
-        setPaymentBanner({
-          type: 'error',
-          message: 'تم إلغاء عملية الدفع عبر Paymob أو لم تكتمل بنجاح.',
-        });
-        try {
-          localStorage.removeItem('pes_pending_purchase');
-        } catch {}
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // إخفاء إشعار الدفع تلقائياً بعد 7 ثوانٍ حتى لا يظل معلقاً في الشاشة
-  useEffect(() => {
-    if (paymentBanner) {
-      const timer = setTimeout(() => {
-        setPaymentBanner(null);
-      }, 7000);
-      return () => clearTimeout(timer);
-    }
-  }, [paymentBanner]);
 
   return (
     <div className="app-wrapper">
@@ -266,85 +98,6 @@ export default function App() {
         <div className="glow-orb-2" />
         <div className="glow-orb-3" />
       </div>
-
-      {/* ── Status Banner (Paymob results) ── */}
-      {paymentBanner && (
-        <div
-          style={{
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            left: '20px',
-            maxWidth: '540px',
-            margin: '0 auto',
-            zIndex: 9999,
-            padding: '14px 18px',
-            borderRadius: '14px',
-            background: paymentBanner.type === 'success' ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)',
-            backdropFilter: 'blur(10px)',
-            color: '#fff',
-            fontWeight: 800,
-            fontSize: '14px',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px',
-            animation: 'fadeIn 0.3s ease',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '20px' }}>{paymentBanner.type === 'success' ? '🎉' : '⚠️'}</span>
-            <span>{paymentBanner.message}</span>
-          </div>
-          <button
-            onClick={() => setPaymentBanner(null)}
-            style={{
-              background: 'rgba(0,0,0,0.2)',
-              border: 'none',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '4px 8px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-            }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* ── Loading verification modal ── */}
-      {isVerifyingPayment && (
-        <div className="modal-backdrop-overlay" style={{ zIndex: 99999 }}>
-          <div
-            className="device-modal-card"
-            style={{
-              maxWidth: '420px',
-              textAlign: 'center',
-              padding: '36px 24px',
-            }}
-          >
-            <div
-              style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
-                border: '3px solid rgba(56, 189, 248, 0.2)',
-                borderTopColor: '#38bdf8',
-                margin: '0 auto 20px',
-                animation: 'spin 1s linear infinite',
-              }}
-            />
-            <h3 style={{ fontSize: '18px', fontWeight: 900, color: '#38bdf8', marginBottom: '8px' }}>
-              جاري التحقق من عملية الدفع...
-            </h3>
-            <p style={{ fontSize: '13px', color: '#94a3b8' }}>
-              ننتظر تأكيد بنك Paymob لاستلام بيانات حسابك فورياً ⚡
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* ── Navbar ── */}
       <Navbar
@@ -437,50 +190,16 @@ export default function App() {
         />
       )}
 
-      {/* نافذة اختيار الدفع عبر Paymob أو Paddle */}
+      {/* نافذة الشراء المباشر وتسليم الحساب فوراً */}
       {purchaseSuccessAccount && (
         <PurchaseModal
           account={purchaseSuccessAccount}
-          isPayingWithPaymob={isPayingWithPaymob}
-          paymobResponseData={paymobResponseData}
-          paymobError={paymobError}
-          isPayingWithPaddle={isPayingWithPaddle}
-          paddleError={paddleError}
-          onPayWithPaddle={handlePayWithPaddle}
           onClose={handleCloseOrder}
-          onPayWithPaymob={handlePayWithPaymob}
           onPurchaseSuccess={fetchAccounts}
         />
       )}
 
-      {/* نافذة تسليم بيانات الحساب الفعلية بعد تأكيد دفع Paymob بنجاح */}
-      {paymentDeliveredAccount && (
-        <PurchaseModal
-          account={{
-            id: paymentDeliveredAccount.accountId,
-            title: paymentDeliveredAccount.accountTitle,
-            platform: paymentDeliveredAccount.platform || 'android',
-            price: paymentDeliveredAccount.price,
-            currency: 'EGP',
-            teamStrength: 0,
-            coins: 0,
-            gp: '',
-            epicCount: 0,
-            highlightPlayers: [],
-            loginMethod: 'KONAMI ID',
-            isAvailable: true,
-            featured: false,
-            imageUrl: '',
-            details: '',
-          }}
-          isPayingWithPaymob={false}
-          paymobResponseData={null}
-          initialDeliveredData={paymentDeliveredAccount}
-          onClose={() => setPaymentDeliveredAccount(null)}
-          onPayWithPaymob={() => {}}
-          onPurchaseSuccess={fetchAccounts}
-        />
-      )}
+
 
       {isAccountModalOpen && (
         <AccountFormModal

@@ -138,6 +138,56 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
+// 2.1 POST /api/pes-accounts/:id/instant-purchase (شراء مباشر وتسليم فوري للحساب وحذفه من المخزون)
+router.post('/:id/instant-purchase', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const account = await prisma.pesAccount.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { stocks: true },
+        },
+      },
+    });
+
+    if (!account) {
+      res.status(404).json({ success: false, message: 'الحساب المطلوب غير موجود في المتجر' });
+      return;
+    }
+
+    const stockCount = account._count?.stocks ?? 0;
+    if (!account.isAvailable || stockCount === 0) {
+      res.status(400).json({
+        success: false,
+        message: 'عذراً! نفد مخزون هذا الحساب بالكامل من المتجر، لا يمكن الشراء حالياً 🔴',
+      });
+      return;
+    }
+
+    const deliveryResult = await StockService.purchaseAndDeliverOne(
+      id,
+      undefined,
+      `instant_${Date.now()}`
+    );
+
+    res.json({
+      success: true,
+      message: 'تم الشراء وتسليم الحساب بنجاح 🎉',
+      data: {
+        deliveredAccount: deliveryResult.deliveredAccount,
+      },
+    });
+  } catch (error: any) {
+    console.error('Instant purchase error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'فشل في سحب وتسليم الحساب من المخزون',
+    });
+  }
+});
+
 // 3. POST /api/pes-accounts (إضافة حساب جديد إلى قاعدة البيانات من لوحة التحكم)
 router.post('/', authenticate, authorizeRoles('admin'), async (req: Request, res: Response) => {
   try {

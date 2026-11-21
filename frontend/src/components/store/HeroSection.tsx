@@ -175,7 +175,7 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
                 gap: '6px',
               }}
             >
-              <span>💳</span> محافظ وفيزا Paymob
+              <span>⚡</span> تسليم فوري ومباشر
             </span>
           </div>
         </div>
@@ -376,4 +376,5 @@ export function HeroSection({ totalAccounts, onBuyClick }: HeroSectionProps) {
     </section>
   );
 }
+
 

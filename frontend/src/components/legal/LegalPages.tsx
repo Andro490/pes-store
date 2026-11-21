@@ -55,7 +55,7 @@ function TermsContent() {
       </div>
 
       <div className="bg-cyan-950/20 border border-cyan-800/40 p-4 rounded-xl text-xs sm:text-sm text-cyan-200" dir="ltr">
-        <strong>English Summary:</strong> By accessing and purchasing digital services and football gaming packages on <strong>pes.fouadf9.network</strong>, you agree to comply with our Terms of Service. Paddle.com is our authorized Merchant of Record providing international checkout and billing.
+        <strong>English Summary:</strong> By accessing and purchasing digital services and football gaming packages on <strong>pes.fouadf9.network</strong>, you agree to comply with our Terms of Service. Our store provides automated instant delivery for digital gaming services.
       </div>
 
       <section className="space-y-3">
@@ -75,7 +75,7 @@ function TermsContent() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-white">3. معالجة المدفوعات وبوابات الدفع (Payment Processors)</h2>
         <p>
-          تتم معالجة المدفوعات الدولية عبر بوابة <strong>Paddle.com</strong> بصفته التاجر المعتمد (Merchant of Record)، مما يضمن أعلى معايير الأمان والتشفير (PCI-DSS compliant). كما تتم معالجة المدفوعات المحلية داخل جمهورية مصر العربية عبر بوابة <strong>Paymob</strong> المعتمدة من البنك المركزي المصري.
+          تتم جميع المعاملات بشكل فوري وتلقائي مع تسليم مباشر لبيانات الحساب على الشاشة فور إتمام الطلب.
         </p>
       </section>
 
@@ -108,7 +108,7 @@ function PrivacyContent() {
       </div>
 
       <div className="bg-cyan-950/20 border border-cyan-800/40 p-4 rounded-xl text-xs sm:text-sm text-cyan-200" dir="ltr">
-        <strong>English Summary:</strong> We respect your privacy. We do not store or process payment card details directly. International payments are securely handled by <strong>Paddle.com</strong>. We only retain minimal order data necessary to fulfill your digital delivery.
+        <strong>English Summary:</strong> We respect your privacy. We do not store or process payment card details directly. Instant and automated digital delivery is processed on-demand. We only retain minimal order data necessary to fulfill your digital delivery.
       </div>
 
       <section className="space-y-3">
@@ -126,7 +126,7 @@ function PrivacyContent() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-white">2. حماية بيانات الدفع والبطاقات البنكية (Card Security)</h2>
         <p>
-          لا يقوم موقعنا نهائياً بتسجيل أو تخزين أو معالجة أي بيانات خاصة ببطاقات الائتمان أو أرقام الحسابات البنكية. تتم جميع عمليات التحصيل بشكل مباشر ومشفر بالكامل عبر خوادم <strong>Paddle</strong> أو <strong>Paymob</strong> المتوافقة مع معايير الأمان الدولية (PCI DSS Level 1).
+          لا يقوم موقعنا نهائياً بتسجيل أو تخزين أو معالجة أي بيانات خاصة ببطاقات الائتمان أو أرقام الحسابات البنكية. تتم جميع عمليات التحصيل بشكل مباشر ومشفر بالكامل بأعلى معايير التشفير والأمان.
         </p>
       </section>
 
@@ -182,7 +182,7 @@ function RefundContent() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-white">3. مدة تقديم الطلب وطريقة الاسترجاع (Refund Window & Process)</h2>
         <p>
-          يتم تقديم طلب الاسترداد أو الاستبدال خلال <strong>48 ساعة</strong> من وقت إتمام عملية الشراء عبر التواصل مع الدعم الفني المباشر في المتجر. يتم فحص المشكلة وحلها فورياً أو رد المبلغ إلى نفس وسيلة الدفع الأصلية عبر Paddle خلال فترة تتراوح بين 3 إلى 7 أيام عمل طبقاً لسياسات البنك المصدر.
+          يتم تقديم طلب الاسترداد أو الاستبدال خلال <strong>48 ساعة</strong> من وقت إتمام عملية الشراء عبر التواصل مع الدعم الفني المباشر في المتجر. يتم فحص المشكلة وحلها فورياً أو رد المبلغ إلى نفس وسيلة الدفع الأصلية فورياً من خلال الدعم الفني المباشر.
         </p>
       </section>
     </div>
@@ -242,7 +242,7 @@ function PricingContent({ onBackToStore }: { onBackToStore: () => void }) {
               <span className="text-xs text-gray-400 block mt-1">≈ $9.80 USD</span>
             </div>
             <ul className="space-y-2 text-xs text-gray-200">
-              <li>⚡ تسليم فوري وتلقائي عبر Paddle</li>
+              <li>⚡ تسليم فوري ومباشر على الشاشة</li>
               <li>🛡️ لاعبين نيتف أساطير (شيفشينكو، باتستوتا)</li>
               <li>⚽ بطاقات نجوم متطورة جاهزة</li>
               <li>💬 دعم فني مخصص مباشر</li>
@@ -293,5 +293,6 @@ function PricingContent({ onBackToStore }: { onBackToStore: () => void }) {
     </div>
   );
 }
+
 
 

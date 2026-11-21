@@ -1,629 +1,217 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
-import type { PesAccount, DeliveredAccount } from '../../types';
-
-// TODO: move to env / config
-const WHATSAPP_NUMBER = '201144231586';
+import type { PesAccount } from '../../types';
 
 interface PurchaseModalProps {
   account: PesAccount;
-  isPayingWithPaymob: boolean;
-  paymobResponseData: any;
-  paymobError?: string | null;
-  initialDeliveredData?: DeliveredAccount | null;
   onClose: () => void;
-  onPayWithPaymob: () => void;
   onPurchaseSuccess?: () => void;
-  isPayingWithPaddle?: boolean;
-  paddleError?: string | null;
-  onPayWithPaddle?: () => void;
 }
+
+const TELEGRAM_PHONE = '201144231586';
+const TELEGRAM_URL = `https://t.me/+${TELEGRAM_PHONE}`;
 
 export function PurchaseModal({
   account,
-  isPayingWithPaymob,
-  paymobResponseData: _paymobResponseData,
-  paymobError,
-  initialDeliveredData,
   onClose,
-  onPayWithPaymob,
-  isPayingWithPaddle = false,
-  paddleError,
-  onPayWithPaddle,
 }: PurchaseModalProps) {
   const { t, isRTL, formatPrice } = useLanguage();
+  const [copied, setCopied] = useState(false);
 
-  const [deliveredData] = useState<DeliveredAccount | null>(initialDeliveredData || null);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showAltPayments, setShowAltPayments] = useState(false);
+  const handleTelegramClick = () => {
+    const orderDetails = `مرحباً 👋 أريد شراء حساب eFootball التالي:
+🎮 الحساب: ${account.title}
+💰 السعر: ${formatPrice(account.price)}
+🪙 الكوينز: ${account.coins}
+📱 المنصة: ${account.platform === 'android' ? 'Android' : 'iOS'}
+🆔 كود الحساب: ${account.id}`;
 
-  const ALT_PAYMENT_METHODS = [
-    {
-      id: 'binance',
-      label: 'Binance Pay',
-      icon: '🟡',
-      desc: 'دفع بالـ USDT عبر Binance Pay',
-      detail: 'Binance Pay (USDT)',
-    },
-    {
-      id: 'asia-transfer',
-      label: 'Asia عراقي — تحويل بنكي',
-      icon: '🏦',
-      desc: 'تحويل بنكي عراقي مباشر',
-      detail: 'Asia عراقي (تحويل بنكي)',
-    },
-    {
-      id: 'asia-card',
-      label: 'Asia عراقي — كروت',
-      icon: '💳',
-      desc: 'دفع بالكارت عبر Asia عراق',
-      detail: 'Asia عراقي (كارت)',
-    },
-    {
-      id: 'bybit',
-      label: 'Bybit Pay',
-      icon: '🔵',
-      desc: 'دفع بالـ USDT عبر Bybit',
-      detail: 'Bybit Pay (USDT)',
-    },
-  ];
+    // Copy to clipboard
+    try {
+      navigator.clipboard.writeText(orderDetails);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      // ignore clipboard error
+    }
 
-  const buildAltWhatsAppMsg = (methodDetail: string) =>
-    `مرحباً 👋%0Aأريد شراء الحساب التالي عبر *${methodDetail}*:%0A%0A🎮 *${account.title}*%0A💰 السعر: ${formatPrice(account.price)}%0A🪙 الكوينز: ${account.coins}%0A📱 المنصة: ${account.platform}%0A🆔 ID: ${account.id}%0A%0Aأرجو التأكيد وإرسال بيانات الدفع. شكراً!`;
-
-  const copyToClipboard = (text: string, fieldName: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(fieldName);
-    setTimeout(() => setCopiedField(null), 2500);
+    // Open Telegram chat directly with the phone number
+    window.open(TELEGRAM_URL, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <div className="modal-backdrop-overlay">
-      <div className="device-modal-card" style={{ maxWidth: '520px', textAlign: isRTL ? 'right' : 'left' }}>
+      <div className="device-modal-card" style={{ maxWidth: '500px', textAlign: isRTL ? 'right' : 'left' }}>
         <button onClick={onClose} className="btn-modal-close">✕</button>
 
-        {/* ════════════════════════════════════════════════════════════════
-            CASE 1: ACCOUNT DELIVERED SUCCESSFULLY (بعد تأكيد دفع Paymob)
-        ════════════════════════════════════════════════════════════════ */}
-        {deliveredData ? (
-          <div>
-            {/* Header Icon */}
-            <div
-              style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
-                background: 'rgba(16, 185, 129, 0.2)',
-                border: '2px solid rgba(16, 185, 129, 0.5)',
-                margin: '0 auto 16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '30px',
-                boxShadow: '0 0 25px rgba(16, 185, 129, 0.4)',
-              }}
-            >
-              🎉
-            </div>
+        {/* Header icon */}
+        <div
+          style={{
+            width: '60px',
+            height: '60px',
+            borderRadius: '50%',
+            background: 'rgba(34, 158, 217, 0.15)',
+            border: '2px solid rgba(34, 158, 217, 0.4)',
+            margin: '0 auto 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '28px',
+            boxShadow: '0 0 25px rgba(34, 158, 217, 0.3)',
+          }}
+        >
+          ✈️
+        </div>
 
-            <h3 className="modal-heading" style={{ color: '#34d399', textAlign: 'center', fontSize: '20px', marginBottom: '6px' }}>
-              تم الشراء وتسليم الحساب بنجاح!
-            </h3>
-            <p className="modal-subtext" style={{ textAlign: 'center', marginBottom: '18px', color: '#cbd5e1' }}>
-              تم سحب الحساب وحذفه من المخزون تلقائياً، وهو الآن ملكك وحدك 🔒
-            </p>
+        <h3 className="modal-heading" style={{ textAlign: 'center', fontSize: '20px', marginBottom: '6px' }}>
+          {t('orderModalTitle')}
+        </h3>
+        <p className="modal-subtext" style={{ marginBottom: '16px', textAlign: 'center', color: '#cbd5e1' }}>
+          {t('orderSelectedPrefix')}{' '}
+          <strong style={{ color: '#38bdf8' }}>{account.title}</strong>
+        </p>
 
-            {/* Credentials Card */}
-            <div
-              style={{
-                background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9))',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
-                borderRadius: '16px',
-                padding: '18px',
-                marginBottom: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '14px',
-              }}
-            >
-              {/* Account title */}
-              <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '10px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
-                  الحساب المشترى:
-                </span>
-                <span style={{ fontWeight: 'bold', color: '#fff', fontSize: '14px' }}>
-                  {deliveredData.accountTitle}
-                </span>
-              </div>
-
-              {/* Email Field */}
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#38bdf8', display: 'block', marginBottom: '6px' }}>
-                  ✉️ البريد الإلكتروني (Email):
-                </label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="text"
-                    readOnly
-                    value={deliveredData.email}
-                    dir="ltr"
-                    className="search-input-field"
-                    style={{
-                      fontFamily: 'monospace',
-                      fontSize: '13px',
-                      background: 'rgba(0,0,0,0.4)',
-                      color: '#34d399',
-                      padding: '8px 12px',
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(deliveredData.email, 'email')}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: '10px',
-                      background: copiedField === 'email' ? '#10b981' : 'rgba(56, 189, 248, 0.15)',
-                      color: copiedField === 'email' ? '#030712' : '#38bdf8',
-                      border: '1px solid rgba(56, 189, 248, 0.3)',
-                      fontWeight: 'bold',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {copiedField === 'email' ? '✓ تم النسخ' : '📋 نسخ'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#38bdf8' }}>
-                    🔑 كلمة المرور (Password):
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer' }}
-                  >
-                    {showPassword ? 'إخفاء 🙈' : 'إظهار 👁️'}
-                  </button>
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    readOnly
-                    value={deliveredData.password}
-                    dir="ltr"
-                    className="search-input-field"
-                    style={{
-                      fontFamily: 'monospace',
-                      fontSize: '13px',
-                      background: 'rgba(0,0,0,0.4)',
-                      color: '#f1f5f9',
-                      padding: '8px 12px',
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(deliveredData.password, 'password')}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: '10px',
-                      background: copiedField === 'password' ? '#10b981' : 'rgba(56, 189, 248, 0.15)',
-                      color: copiedField === 'password' ? '#030712' : '#38bdf8',
-                      border: '1px solid rgba(56, 189, 248, 0.3)',
-                      fontWeight: 'bold',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {copiedField === 'password' ? '✓ تم النسخ' : '📋 نسخ'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Code Mail URL */}
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#38bdf8', display: 'block', marginBottom: '6px' }}>
-                  📬 رابط استقبال كود تسجيل الدخول (Mail Box):
-                </label>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                  <input
-                    type="text"
-                    readOnly
-                    value={deliveredData.codeUrl}
-                    dir="ltr"
-                    className="search-input-field"
-                    style={{
-                      fontFamily: 'monospace',
-                      fontSize: '12px',
-                      background: 'rgba(0,0,0,0.4)',
-                      color: '#93c5fd',
-                      padding: '8px 12px',
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(deliveredData.codeUrl, 'codeUrl')}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: '10px',
-                      background: copiedField === 'codeUrl' ? '#10b981' : 'rgba(56, 189, 248, 0.15)',
-                      color: copiedField === 'codeUrl' ? '#030712' : '#38bdf8',
-                      border: '1px solid rgba(56, 189, 248, 0.3)',
-                      fontWeight: 'bold',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {copiedField === 'codeUrl' ? '✓ تم النسخ' : '📋 نسخ'}
-                  </button>
-                </div>
-
-                <a
-                  href={deliveredData.codeUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #0284c7, #2563eb)',
-                    color: '#fff',
-                    fontWeight: 800,
-                    fontSize: '13px',
-                    textDecoration: 'none',
-                    boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)',
-                  }}
-                >
-                  <span>🚀</span>
-                  <span>فتح صفحة استقبال الكود والرسائل الآن</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Quick copy all button */}
-            <button
-              type="button"
-              onClick={() => {
-                const fullText = `🎮 بيانات حساب eFootball:\nالعنوان: ${deliveredData.accountTitle}\nالبريد: ${deliveredData.email}\nكلمة المرور: ${deliveredData.password}\nرابط الكود: ${deliveredData.codeUrl}`;
-                copyToClipboard(fullText, 'all');
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                width: '100%',
-                padding: '12px',
-                borderRadius: '12px',
-                background: copiedField === 'all' ? '#10b981' : 'rgba(255, 255, 255, 0.08)',
-                color: copiedField === 'all' ? '#030712' : '#fff',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                fontWeight: 800,
-                fontSize: '13px',
-                cursor: 'pointer',
-                marginBottom: '10px',
-              }}
-            >
-              <span>📋</span>
-              <span>{copiedField === 'all' ? 'تم نسخ جميع البيانات في الحافظة ✅' : 'نسخ جميع بيانات الحساب دفعة واحدة'}</span>
-            </button>
-
-            <button
-              onClick={onClose}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #10b981, #06b6d4)',
-                color: '#030712',
-                fontWeight: 900,
-                fontSize: '14px',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              تم وحفظت البيانات بنجاح ✅
-            </button>
+        {/* Order details card */}
+        <div
+          style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid var(--border-light)',
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+            <span style={{ color: 'var(--text-muted)' }}>{t('orderAccountId')}</span>
+            <span style={{ fontWeight: 'bold', color: '#38bdf8', fontFamily: 'monospace' }}>{account.id}</span>
           </div>
-        ) : (
-          /* ════════════════════════════════════════════════════════════════
-             CASE 2: ORDER & PAYMENT SELECTION (Paymob Only)
-          ════════════════════════════════════════════════════════════════ */
-          <div>
-            {/* Header icon */}
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '50%',
-                background: 'rgba(56, 189, 248, 0.15)',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
-                margin: '0 auto 16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '26px',
-              }}
-            >
-              💳
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+            <span style={{ color: 'var(--text-muted)' }}>{t('orderDeviceOS')}</span>
+            <span style={{ fontWeight: 'bold', color: '#fff' }}>
+              {account.platform === 'android' ? '🤖 Android' : '🍏 iOS'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+            <span style={{ color: 'var(--text-muted)' }}>{t('modalCoins')}:</span>
+            <span style={{ fontWeight: 'bold', color: '#fde68a' }}>
+              🪙 {account.coins}
+            </span>
+          </div>
+
+          {account.stockCount !== undefined && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+              <span style={{ color: 'var(--text-muted)' }}>المخزون المتوفر:</span>
+              <span style={{ fontWeight: 'bold', color: account.stockCount > 0 ? '#34d399' : '#f87171' }}>
+                {account.stockCount > 0 ? `${account.stockCount} حساب جاهز للتسليم ⚡` : 'نفد المخزون 🔴'}
+              </span>
             </div>
+          )}
 
-            <h3 className="modal-heading" style={{ textAlign: 'center' }}>{t('orderModalTitle')}</h3>
-            <p className="modal-subtext" style={{ marginBottom: '16px', textAlign: 'center' }}>
-              {t('orderSelectedPrefix')}{' '}
-              <strong style={{ color: '#38bdf8' }}>{account.title}</strong>
-            </p>
-
-            {/* Order details card */}
-            <div
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <span style={{ color: 'var(--text-muted)' }}>{t('orderAmountRequired')}</span>
+            <span
               style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid var(--border-light)',
-                borderRadius: '16px',
-                padding: '16px',
-                marginBottom: '18px',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>{t('orderAccountId')}</span>
-                <span style={{ fontWeight: 'bold', color: '#38bdf8', fontFamily: 'monospace' }}>{account.id}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>{t('orderDeviceOS')}</span>
-                <span style={{ fontWeight: 'bold', color: '#fff' }}>
-                  {account.platform === 'android' ? '🤖 Android' : '🍏 iOS'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>{t('modalCoins')}:</span>
-                <span style={{ fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <img src="/efootball-coin.png" alt="coin" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
-                  <span>{account.coins}</span>
-                </span>
-              </div>
-              {account.stockCount !== undefined && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>المخزون المتوفر:</span>
-                  <span style={{ fontWeight: 'bold', color: account.stockCount > 0 ? '#34d399' : '#f87171' }}>
-                    {account.stockCount > 0 ? `${account.stockCount} حساب جاهز للتسليم ⚡` : 'نفد المخزون 🔴'}
-                  </span>
-                </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ color: 'var(--text-muted)' }}>{t('orderAmountRequired')}</span>
-                <span
-                  style={{
-                    fontWeight: '900',
-                    color: 'var(--accent-emerald)',
-                    fontSize: '18px',
-                    fontFamily: 'Outfit, sans-serif',
-                  }}
-                >
-                  {formatPrice(account.price)}
-                </span>
-              </div>
-            </div>
-
-            {/* Security Guarantee Banner */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '10px',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                background: 'rgba(16, 185, 129, 0.08)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
-                color: '#6ee7b7',
-                fontSize: '12px',
-                marginBottom: '16px',
-                lineHeight: 1.6,
-              }}
-            >
-              <span style={{ fontSize: '18px' }}>⚡</span>
-              <div>
-                <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>تسليم فوري ومباشر بعد الدفع:</strong>
-                بمجرد إتمام الدفع عبر Paymob أو Paddle، سيتم سحب الحساب من السيرفر وعرض البريد وكلمة المرور ورابط استلام الكود فوراً على شاشتك.
-              </div>
-            </div>
-
-            {/* Error Banner – نفد المخزون أو أي خطأ من السيرفر */}
-            {(paymobError || paddleError) && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '10px',
-                  padding: '12px 14px',
-                  borderRadius: '12px',
-                  background: 'rgba(239, 68, 68, 0.12)',
-                  border: '1px solid rgba(239, 68, 68, 0.4)',
-                  color: '#fca5a5',
-                  fontSize: '13px',
-                  marginBottom: '14px',
-                  lineHeight: 1.6,
-                }}
-              >
-                <span style={{ fontSize: '20px', flexShrink: 0 }}>🚫</span>
-                <div>
-                  <strong style={{ color: '#f87171', display: 'block', marginBottom: '2px' }}>تعذّر إتمام الدفع:</strong>
-                  {paymobError || paddleError}
-                </div>
-              </div>
-            )}
-
-            {/* Paymob Primary Button */}
-            <button
-              onClick={onPayWithPaymob}
-              disabled={isPayingWithPaymob || isPayingWithPaddle || !account.isAvailable}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                width: '100%',
-                padding: '15px',
-                borderRadius: '14px',
-                background: account.isAvailable
-                  ? 'linear-gradient(135deg, #0284c7, #2563eb)'
-                  : 'rgba(255,255,255,0.05)',
-                color: account.isAvailable ? '#fff' : '#64748b',
                 fontWeight: '900',
-                fontSize: '14px',
-                border: 'none',
-                cursor: account.isAvailable && !isPayingWithPaymob && !isPayingWithPaddle ? 'pointer' : 'not-allowed',
-                boxShadow: account.isAvailable ? '0 6px 20px rgba(37, 99, 235, 0.35)' : 'none',
-                marginBottom: '10px',
-                transition: 'all 0.2s ease',
+                color: 'var(--accent-emerald)',
+                fontSize: '19px',
+                fontFamily: 'Outfit, sans-serif',
               }}
             >
-              <span style={{ fontSize: '18px' }}>💳</span>
-              <span>{isPayingWithPaymob ? 'جاري توجيهك إلى Paymob...' : 'الدفع وتأكيد الشراء عبر Paymob (فيزا / محافظ مصرية)'}</span>
-            </button>
+              {formatPrice(account.price)}
+            </span>
+          </div>
+        </div>
 
-            {/* Paddle Primary Button */}
-            {onPayWithPaddle && (
-              <button
-                onClick={onPayWithPaddle}
-                disabled={isPayingWithPaymob || isPayingWithPaddle || !account.isAvailable}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  width: '100%',
-                  padding: '15px',
-                  borderRadius: '14px',
-                  background: account.isAvailable
-                    ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                    : 'rgba(255,255,255,0.05)',
-                  color: account.isAvailable ? '#fff' : '#64748b',
-                  fontWeight: '900',
-                  fontSize: '14px',
-                  border: 'none',
-                  cursor: account.isAvailable && !isPayingWithPaymob && !isPayingWithPaddle ? 'pointer' : 'not-allowed',
-                  boxShadow: account.isAvailable ? '0 6px 20px rgba(139, 92, 246, 0.35)' : 'none',
-                  marginBottom: '12px',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <span style={{ fontSize: '18px' }}>🌐</span>
-                <span>
-                  {isPayingWithPaddle
-                    ? 'جاري فتح بوابة الدفع Paddle...'
-                    : 'الدفع وتأكيد الشراء عبر Paddle (بطاقات دولية / PayPal)'}
-                </span>
-              </button>
-            )}
+        {/* Telegram Direct Notice Banner */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+            padding: '12px 14px',
+            borderRadius: '12px',
+            background: 'rgba(34, 158, 217, 0.1)',
+            border: '1px solid rgba(34, 158, 217, 0.3)',
+            color: '#7dd3fc',
+            fontSize: '12px',
+            marginBottom: '16px',
+            lineHeight: 1.6,
+          }}
+        >
+          <span style={{ fontSize: '18px' }}>💬</span>
+          <div>
+            <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>
+              الشراء المباشر عبر تيليجرام:
+            </strong>
+            عند الضغط أدناه سيتم نسخ كود وتفاصيل الحساب تلقائياً وفتح محادثة تيليجرام مباشرة مع الإدارة على الرقم <span dir="ltr" style={{ fontWeight: 'bold', color: '#fff' }}>+20 114 423 1586</span> لإتمام الشراء واستلام الحساب فوراً.
+          </div>
+        </div>
 
-            {/* Paymob response link if available — hidden, redirect is automatic */}
-
-            {/* ─── وسائل الدفع البديلة ─── */}
-            {!showAltPayments ? (
-              <button
-                onClick={() => setShowAltPayments(true)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  width: '100%',
-                  padding: '13px',
-                  borderRadius: '14px',
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  color: '#34d399',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                  fontWeight: '800',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  marginBottom: '12px',
-                  fontFamily: 'inherit',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <span>💳</span>
-                <span>وسائل دفع أخرى (Binance / Asia / Bybit)</span>
-                <span style={{ marginRight: 'auto', fontSize: '16px' }}>▾</span>
-              </button>
-            ) : (
-              <div
-                style={{
-                  marginBottom: '12px',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(239, 68, 68, 0.25)',
-                  overflow: 'hidden',
-                  background: 'rgba(255,255,255,0.03)',
-                }}
-              >
-                {/* Header */}
-                <div
-                  style={{
-                    padding: '10px 14px',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    borderBottom: '1px solid rgba(239, 68, 68, 0.15)',
-                    fontSize: '12px',
-                    color: '#f87171',
-                    fontWeight: 800,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setShowAltPayments(false)}
-                >
-                  <span>💳 اختر طريقة الدفع — سيتم فتح واتساب تلقائياً</span>
-                  <span style={{ fontSize: '16px' }}>▴</span>
-                </div>
-
-                {/* Payment options */}
-                {ALT_PAYMENT_METHODS.map((method) => (
-                  <a
-                    key={method.id}
-                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${buildAltWhatsAppMsg(method.detail)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      textDecoration: 'none',
-                      borderBottom: '1px solid rgba(255,255,255,0.05)',
-                      transition: 'background 0.2s',
-                      cursor: 'pointer',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <span style={{ fontSize: '22px' }}>{method.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', fontWeight: 800, color: '#f1f5f9' }}>{method.label}</div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{method.desc}</div>
-                    </div>
-                    <span style={{ fontSize: '18px', color: '#25d366' }}>↗ واتساب</span>
-                  </a>
-                ))}
-              </div>
-            )}
-
-            <button onClick={onClose} className="btn-all-devices-link">
-              {t('backToStoreBtn')}
-            </button>
+        {/* Copy confirmation toast */}
+        {copied && (
+          <div
+            style={{
+              padding: '10px',
+              borderRadius: '10px',
+              background: 'rgba(16, 185, 129, 0.2)',
+              border: '1px solid #10b981',
+              color: '#34d399',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              marginBottom: '12px',
+            }}
+          >
+            ✓ تم نسخ تفاصيل الحساب إلى الحافظة! جاري فتح تيليجرام...
           </div>
         )}
+
+        {/* ─── MAIN BUTTON: تواصل للشراء عبر تيليجرام ─── */}
+        <button
+          onClick={handleTelegramClick}
+          disabled={!account.isAvailable}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            width: '100%',
+            padding: '15px',
+            borderRadius: '14px',
+            background: account.isAvailable
+              ? 'linear-gradient(135deg, #0088cc, #229ED9)'
+              : 'rgba(255,255,255,0.05)',
+            color: account.isAvailable ? '#ffffff' : '#64748b',
+            fontWeight: '900',
+            fontSize: '15px',
+            border: 'none',
+            cursor: account.isAvailable ? 'pointer' : 'not-allowed',
+            boxShadow: account.isAvailable ? '0 6px 20px rgba(0, 136, 204, 0.4)' : 'none',
+            marginBottom: '10px',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <span style={{ fontSize: '20px' }}>✈️</span>
+          <span>تواصل للشراء عبر تيليجرام (01144231586)</span>
+        </button>
+
+        <button
+          onClick={onClose}
+          style={{
+            width: '100%',
+            padding: '10px',
+            background: 'transparent',
+            border: 'none',
+            color: '#94a3b8',
+            fontSize: '12px',
+            cursor: 'pointer',
+          }}
+        >
+          إلغاء والعودة للمتجر
+        </button>
       </div>
     </div>
   );
 }
-

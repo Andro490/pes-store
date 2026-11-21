@@ -1,4 +1,4 @@
-import { useLanguage } from '../../i18n/LanguageContext';
+﻿import { useLanguage } from '../../i18n/LanguageContext';
 
 interface FooterProps {
   isAdminLoggedIn?: boolean;
@@ -76,3 +76,4 @@ export function Footer({ onNavigate }: FooterProps) {
     </footer>
   );
 }
+

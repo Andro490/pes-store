@@ -131,6 +131,25 @@ export const pesAccountsApi = {
       method: 'DELETE',
     });
   },
+  instantPurchase: async (accountId: string): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      deliveredAccount: {
+        accountId: string;
+        accountTitle: string;
+        email: string;
+        password: string;
+        codeUrl: string;
+        platform?: string;
+        price: number;
+      };
+    };
+  }> => {
+    return request(`/pes-accounts/${accountId}/instant-purchase`, {
+      method: 'POST',
+    });
+  },
 };
 
 // ─── Paymob API ───────────────────────────────────────────────────────────────

@@ -29,7 +29,7 @@ export const translations = {
     statCustomerRating: 'تقييم العملاء',
     statInstantDelivery: 'تسليم فوري ومباشر',
     statThreeMins: '3 ثواني ',
-    statPaymentMethods: 'Paymob & فيزا & كاش',
+    statPaymentMethods: 'تسليم فوري ومباشر ⚡',
     statInstantCheckout: 'دفع إلكتروني فوري',
 
     // Store Section
@@ -212,7 +212,7 @@ export const translations = {
     statCustomerRating: 'Customer Rating',
     statInstantDelivery: 'Instant Delivery',
     statThreeMins: '3 second',
-    statPaymentMethods: 'Paymob, Cards & Wallets',
+    statPaymentMethods: 'Instant Delivery ⚡',
     statInstantCheckout: 'Instant Checkout',
 
     // Store Section
@@ -369,4 +369,5 @@ export const translations = {
 };
 
 export type TranslationKey = keyof typeof translations.ar;
+
 
