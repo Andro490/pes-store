@@ -8,8 +8,6 @@ interface StoreSectionProps {
   filteredAccounts: PesAccount[];
   loading: boolean;
   error: string | null;
-  searchTerm: string;
-  setSearchTerm: (s: string) => void;
   sortBy: SortOption;
   setSortBy: (s: SortOption) => void;
   onFetchRetry: () => void;
@@ -22,8 +20,6 @@ export function StoreSection({
   filteredAccounts,
   loading,
   error,
-  searchTerm,
-  setSearchTerm,
   sortBy,
   setSortBy,
   onFetchRetry,
@@ -43,18 +39,6 @@ export function StoreSection({
             <span>{t('storeSectionSubtitle')}</span>
           </div>
           <h2 className="store-main-title">{t('storeSectionTitle')}</h2>
-        </div>
-
-        {/* Search */}
-        <div className="search-box-wrapper">
-          <input
-            type="text"
-            placeholder={t('searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input-field"
-          />
-          <span className="search-icon-pos">🔍</span>
         </div>
       </div>
 
@@ -119,9 +103,7 @@ export function StoreSection({
             {t('noAccountsDesc')}
           </p>
           <button
-            onClick={() => {
-              setSearchTerm('');
-            }}
+            onClick={() => onFetchRetry()}
             className="btn-filter-pill active-all"
           >
             {t('showAllAccounts')}

@@ -60,7 +60,6 @@ export default function App() {
   // ── Accounts data + CRUD ─────────────────────────────────────────
   const {
     accounts, filteredAccounts, loading, error,
-    searchTerm, setSearchTerm,
     sortBy, setSortBy,
     fetchAccounts, handleSaveAccount, handleTogglePaid, handleApplyDiscount, handleDeleteAccount,
     isAccountModalOpen, setIsAccountModalOpen,
@@ -146,8 +145,6 @@ export default function App() {
             filteredAccounts={filteredAccounts}
             loading={loading}
             error={error}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
             sortBy={sortBy}
             setSortBy={setSortBy}
             onFetchRetry={fetchAccounts}
