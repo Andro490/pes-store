@@ -8,7 +8,7 @@ interface PurchaseModalProps {
   onPurchaseSuccess?: () => void;
 }
 
-const TELEGRAM_PHONE = '201144231586';
+const TELEGRAM_USERNAME = 'joker_19011';
 
 export function PurchaseModal({
   account,
@@ -38,8 +38,8 @@ export function PurchaseModal({
       // ignore clipboard error
     }
 
-    // Open Telegram chat directly with pre-filled message
-    const telegramUrl = `https://t.me/+${TELEGRAM_PHONE}?text=${encodeURIComponent(orderDetails)}`;
+    // Open Telegram chat directly with pre-filled message using username
+    const telegramUrl = `https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(orderDetails)}`;
     window.open(telegramUrl, '_blank', 'noopener,noreferrer');
   };
 
