@@ -9,7 +9,6 @@ interface PurchaseModalProps {
 }
 
 const TELEGRAM_PHONE = '201144231586';
-const TELEGRAM_URL = `https://t.me/+${TELEGRAM_PHONE}`;
 
 export function PurchaseModal({
   account,
@@ -20,13 +19,13 @@ export function PurchaseModal({
 
   const handleTelegramClick = () => {
     const orderDetails = `مرحباً 👋 أريد شراء حساب eFootball التالي:
+🪙 عدد الكوينز: ${account.coins} كوين
 🎮 الحساب: ${account.title}
 💰 السعر: ${formatPrice(account.price)}
-🪙 الكوينز: ${account.coins}
 📱 المنصة: ${account.platform === 'android' ? 'Android' : 'iOS'}
 🆔 كود الحساب: ${account.id}`;
 
-    // Copy to clipboard
+    // Copy to clipboard as backup
     try {
       navigator.clipboard.writeText(orderDetails);
       setCopied(true);
@@ -35,8 +34,9 @@ export function PurchaseModal({
       // ignore clipboard error
     }
 
-    // Open Telegram chat directly with the phone number
-    window.open(TELEGRAM_URL, '_blank', 'noopener,noreferrer');
+    // Open Telegram chat directly with pre-filled message
+    const telegramUrl = `https://t.me/+${TELEGRAM_PHONE}?text=${encodeURIComponent(orderDetails)}`;
+    window.open(telegramUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
