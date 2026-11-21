@@ -9,31 +9,36 @@ interface PurchaseModalProps {
 }
 
 const TELEGRAM_USERNAME = 'joker_19011';
+const WHATSAPP_PHONE = '201288152515';
 
 export function PurchaseModal({
   account,
   onClose,
 }: PurchaseModalProps) {
   const { t, isRTL, formatPrice } = useLanguage();
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
-  const handleTelegramClick = () => {
+  const getOrderDetails = () => {
     const discountText = account.oldPrice && account.oldPrice > account.price
       ? ` (بعد خصم ${Math.round(((account.oldPrice - account.price) / account.oldPrice) * 100)}% - السعر الأصلي ${formatPrice(account.oldPrice)})`
       : '';
 
-    const orderDetails = `مرحباً 👋 أريد شراء حساب eFootball التالي:
+    return `مرحباً 👋 أريد شراء حساب eFootball التالي:
 🪙 عدد الكوينز: ${account.coins} كوين
 🎮 الحساب: ${account.title}
 💰 السعر: ${formatPrice(account.price)}${discountText}
 📱 يعمل على: Android + iOS
 🆔 كود الحساب: ${account.id}`;
+  };
+
+  const handleTelegramClick = () => {
+    const orderDetails = getOrderDetails();
 
     // Copy to clipboard as backup
     try {
       navigator.clipboard.writeText(orderDetails);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
+      setCopied('telegram');
+      setTimeout(() => setCopied(null), 3000);
     } catch {
       // ignore clipboard error
     }
@@ -41,6 +46,23 @@ export function PurchaseModal({
     // Open Telegram chat directly with pre-filled message using username
     const telegramUrl = `https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(orderDetails)}`;
     window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleWhatsAppClick = () => {
+    const orderDetails = getOrderDetails();
+
+    // Copy to clipboard as backup
+    try {
+      navigator.clipboard.writeText(orderDetails);
+      setCopied('whatsapp');
+      setTimeout(() => setCopied(null), 3000);
+    } catch {
+      // ignore clipboard error
+    }
+
+    // Open WhatsApp chat directly with pre-filled message
+    const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(orderDetails)}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -148,7 +170,7 @@ export function PurchaseModal({
           </div>
         </div>
 
-        {/* Telegram Direct Notice Banner */}
+        {/* Contact Direct Notice Banner */}
         <div
           style={{
             display: 'flex',
@@ -167,11 +189,11 @@ export function PurchaseModal({
           <span style={{ fontSize: '18px' }}>💬</span>
           <div>
             <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>
-              {isRTL ? 'الشراء المباشر عبر تيليجرام:' : 'Direct Purchase via Telegram:'}
+              {isRTL ? 'الشراء المباشر الفوري:' : 'Direct Instant Purchase:'}
             </strong>
             {isRTL
-              ? 'عند الضغط أدناه سيتم نسخ كود وتفاصيل الحساب تلقائياً وفتح محادثة تيليجرام مباشرة لإتمام الشراء واستلام الحساب فوراً.'
-              : 'Click below to copy account details and open Telegram chat directly to complete your purchase and receive credentials immediately.'}
+              ? 'اختر وسيلة التواصل المناسبة لك أدناه؛ سيتم نسخ تفاصيل الحساب وفتح المحادثة تلقائياً لإتمام الشراء واستلام الحساب فوراً.'
+              : 'Choose your preferred contact method below; account details will be copied and chat opened automatically to complete your purchase.'}
           </div>
         </div>
 
@@ -190,13 +212,13 @@ export function PurchaseModal({
               marginBottom: '12px',
             }}
           >
-            {isRTL
-              ? '✓ تم نسخ تفاصيل الحساب إلى الحافظة! جاري فتح تيليجرام...'
-              : '✓ Order details copied to clipboard! Opening Telegram...'}
+            {copied === 'whatsapp'
+              ? (isRTL ? '✓ تم نسخ تفاصيل الحساب إلى الحافظة! جاري فتح واتساب...' : '✓ Order details copied! Opening WhatsApp...')
+              : (isRTL ? '✓ تم نسخ تفاصيل الحساب إلى الحافظة! جاري فتح تيليجرام...' : '✓ Order details copied! Opening Telegram...')}
           </div>
         )}
 
-        {/* ─── MAIN BUTTON: تواصل للشراء عبر تيليجرام ─── */}
+        {/* ─── BUTTON 1: تواصل للشراء عبر تيليجرام ─── */}
         <button
           onClick={handleTelegramClick}
           disabled={!account.isAvailable}
@@ -206,7 +228,7 @@ export function PurchaseModal({
             justifyContent: 'center',
             gap: '10px',
             width: '100%',
-            padding: '15px',
+            padding: '14px',
             borderRadius: '14px',
             background: account.isAvailable
               ? 'linear-gradient(135deg, #0088cc, #229ED9)'
@@ -223,6 +245,35 @@ export function PurchaseModal({
         >
           <span style={{ fontSize: '20px' }}>✈️</span>
           <span>{isRTL ? 'تواصل للشراء عبر تيليجرام' : 'Contact to Buy via Telegram'}</span>
+        </button>
+
+        {/* ─── BUTTON 2: تواصل للشراء عبر واتساب ─── */}
+        <button
+          onClick={handleWhatsAppClick}
+          disabled={!account.isAvailable}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            width: '100%',
+            padding: '14px',
+            borderRadius: '14px',
+            background: account.isAvailable
+              ? 'linear-gradient(135deg, #25D366, #128C7E)'
+              : 'rgba(255,255,255,0.05)',
+            color: account.isAvailable ? '#ffffff' : '#64748b',
+            fontWeight: '900',
+            fontSize: '15px',
+            border: 'none',
+            cursor: account.isAvailable ? 'pointer' : 'not-allowed',
+            boxShadow: account.isAvailable ? '0 6px 20px rgba(37, 211, 102, 0.35)' : 'none',
+            marginBottom: '10px',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <span style={{ fontSize: '20px' }}>💬</span>
+          <span>{isRTL ? 'تواصل للشراء عبر واتساب' : 'Contact to Buy via WhatsApp'}</span>
         </button>
 
         <button
