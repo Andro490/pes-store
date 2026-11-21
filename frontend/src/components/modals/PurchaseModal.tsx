@@ -136,9 +136,11 @@ export function PurchaseModal({
           <span style={{ fontSize: '18px' }}>💬</span>
           <div>
             <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>
-              الشراء المباشر عبر تيليجرام:
+              {isRTL ? 'الشراء المباشر عبر تيليجرام:' : 'Direct Purchase via Telegram:'}
             </strong>
-            عند الضغط أدناه سيتم نسخ كود وتفاصيل الحساب تلقائياً وفتح محادثة تيليجرام مباشرة مع الإدارة على الرقم <span dir="ltr" style={{ fontWeight: 'bold', color: '#fff' }}>+20 114 423 1586</span> لإتمام الشراء واستلام الحساب فوراً.
+            {isRTL
+              ? 'عند الضغط أدناه سيتم نسخ كود وتفاصيل الحساب تلقائياً وفتح محادثة تيليجرام مباشرة لإتمام الشراء واستلام الحساب فوراً.'
+              : 'Click below to copy account details and open Telegram chat directly to complete your purchase and receive credentials immediately.'}
           </div>
         </div>
 
@@ -157,7 +159,9 @@ export function PurchaseModal({
               marginBottom: '12px',
             }}
           >
-            ✓ تم نسخ تفاصيل الحساب إلى الحافظة! جاري فتح تيليجرام...
+            {isRTL
+              ? '✓ تم نسخ تفاصيل الحساب إلى الحافظة! جاري فتح تيليجرام...'
+              : '✓ Order details copied to clipboard! Opening Telegram...'}
           </div>
         )}
 
@@ -187,7 +191,7 @@ export function PurchaseModal({
           }}
         >
           <span style={{ fontSize: '20px' }}>✈️</span>
-          <span>تواصل للشراء عبر تيليجرام (01144231586)</span>
+          <span>{isRTL ? 'تواصل للشراء عبر تيليجرام' : 'Contact to Buy via Telegram'}</span>
         </button>
 
         <button
@@ -202,7 +206,7 @@ export function PurchaseModal({
             cursor: 'pointer',
           }}
         >
-          إلغاء والعودة للمتجر
+          {isRTL ? 'إلغاء والعودة للمتجر' : 'Cancel and return to store'}
         </button>
       </div>
     </div>
